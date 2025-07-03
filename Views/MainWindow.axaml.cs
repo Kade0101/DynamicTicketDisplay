@@ -47,12 +47,9 @@ public partial class MainWindow : Window
 
                 await Dispatcher.UIThread.InvokeAsync(() =>
                 {
-                    if (message.Equals("show", StringComparison.OrdinalIgnoreCase) ||
-                        message.Equals("hello", StringComparison.OrdinalIgnoreCase))
-                    {
-                        ShowMainView();
-                    }
-                    else if (message.Equals("hide", StringComparison.OrdinalIgnoreCase))
+                    ShowMainView();
+
+                    if (message.Equals("hide", StringComparison.OrdinalIgnoreCase))
                     {
                         HideMainView();
                     }
