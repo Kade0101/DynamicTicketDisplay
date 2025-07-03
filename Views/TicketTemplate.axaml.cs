@@ -5,9 +5,9 @@ using static TicketDisplayAppModified.Views.MainWindow;
 
 namespace TicketDisplayAppModified.Views
 {
-    public partial class MainView : UserControl
+    public partial class TicketTemplate : UserControl
     {
-        public MainView()
+        public TicketTemplate()
         {
             InitializeComponent();
         }

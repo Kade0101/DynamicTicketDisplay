@@ -13,7 +13,7 @@ namespace TicketDisplayAppModified.Views;
 public partial class MainWindow : Window
 {
     private const int Port = 5000;
-    private MainView? _mainView;
+    private TicketTemplate? _mainView;
 
     public MainWindow()
     {
@@ -84,7 +84,7 @@ public partial class MainWindow : Window
     {
         if (_mainView == null)
         {
-            _mainView = new MainView();
+            _mainView = new TicketTemplate();
             MainViewContainer.Content = _mainView;
         }
     }
