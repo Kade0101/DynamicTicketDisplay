@@ -61,16 +61,19 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="BoolToVisibilityConverter.cs" />
     <Compile Include="InputWindow.xaml.cs">
       <DependentUpon>InputWindow.xaml</DependentUpon>
     </Compile>
     <Compile Include="MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>
     </Compile>
+    <Compile Include="NullToVisibilityConverter.cs" />
     <Compile Include="PiMessageClient.cs" />
     <Compile Include="TicketDisplay.xaml.cs">
       <DependentUpon>TicketDisplay.xaml</DependentUpon>
     </Compile>
+    <Compile Include="TypeToVisibilityConverter.cs" />
     <Page Include="InputWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>

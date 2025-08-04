@@ -1,81 +1,112 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Media;
-using RaffleDisplayApplication;
 
 namespace RaffleDisplayApplication
 {
     public partial class InputWindow : Window
     {
+        public string TicketInfoString { get; private set; }
+        public TicketInfo Ticket { get; private set; }
+        public int SlotNumber { get; set; }
+
+        public List<TicketInfo> TicketList { get; set; } = new List<TicketInfo>();
         public InputWindow()
         {
             InitializeComponent();
         }
-
-        private async void ShowOnTV_Click(object sender, RoutedEventArgs e)
+        private void SaveTicket(object sender, RoutedEventArgs e)
         {
-            //MessageBox.Show("Clicked!");
-            // Get values
-            string raffle = RaffleInput.Text?.Trim();
-            string letter = LetterInput.Text?.Trim();
-            string color = (ColorInput.SelectedItem as ComboBoxItem)?.Content?.ToString()?.Trim();
-
-            TicketInfo ticket = new TicketInfo()
+            // Validate inputs
+            if (string.IsNullOrWhiteSpace(LetterInput.Text) || string.IsNullOrWhiteSpace(RaffleInput.Text) || ColorInput.SelectedItem == null)
             {
-                Number = raffle,
-                Color = color,
-                Letter = letter
-            
-            };
-
-
-            // Check if any required field is empty
-            if (string.IsNullOrEmpty(raffle) || string.IsNullOrEmpty(letter) || string.IsNullOrEmpty(color))
-            {
-                System.Windows.MessageBox.Show("Please fill in the raffle number, letter, and select a colour.", "Missing Information", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show("Please fill in all fields.");
                 return;
             }
 
-            // All fields are filled — open display window
-
-            string piIp = "172.16.0.71"; // Replace with your Pi's IP
-            int port = 5000;
-            //string message = "show";
-
-            try
+            // Only allow one letter
+            var letter = LetterInput.Text.Trim();
+            if (letter.Length != 1 || !char.IsLetter(letter[0]))
             {
-                //MessageBox.Show("About to send message...");
-                await PiMessageClient.SendMessageAsync(piIp, port, ticket);
-                //MessageBox.Show("Message sent to Pi");
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Error sending message: {ex.Message}");
+                MessageBox.Show("Please enter a single letter.");
+                return;
             }
 
+            // Parse and validate number
+            if (!int.TryParse(RaffleInput.Text.Trim(), out int number))
+            {
+                MessageBox.Show("Please enter a valid number.");
+                return;
+            }
+            if (number < 0 || number > 100)
+            {
+                MessageBox.Show("Number must be between 0 and 100.");
+                return;
+            }
 
-            Debug.WriteLine("Showing on Tv");
-            
+            // Pad number with leading zero if less than 10
+            string numberString = number < 10 ? $"0{number}" : number.ToString();
+
+            // Create the ticket info object
+            Ticket = new TicketInfo
+            {
+                Letter = letter.ToUpper(),
+                Number = numberString,
+                Color = (ColorInput.SelectedItem as ComboBoxItem)?.Content?.ToString(),
+                SlotNumber = SlotNumber // Use the SlotNumber property
+            };
+
+            if (TicketList.Exists(t => t.SlotNumber == Ticket.SlotNumber))
+            {
+                MessageBox.Show($"Slot {Ticket.SlotNumber} already has a ticket.");
+                return;
+            }
+            if (TicketList.Count >= 2)
+                return;
+            TicketList.Add(Ticket); // Add the ticket to the list
+            // Create the ticket info string
+            TicketInfoString = $"{Ticket.Letter} {Ticket.Number} {Ticket.Color}";
+            Debug.WriteLine($"Ticket Info: {TicketInfoString}");
+            DialogResult = true;
+            Close();
+
         }
-
+        
 
         private void ColorInput_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-
+            // No logic needed unless you want to handle color changes
         }
 
+        private void BackButton_Click(object sender, RoutedEventArgs e)
+        {
+            DialogResult = false;
+            Close();
         }
 
+        public string GetTicketInfo()
+        {
+            return TicketInfoString;
+        }
 
+        public TicketInfo GetTicket()
+        {
+            return Ticket;
+        }
     }
+
     public class TicketInfo
     {
         public string Letter { get; set; }
         public string Number { get; set; }
         public string Color { get; set; }
+        public int SlotNumber { get; set; } // Added SlotNumber property
     }
+}
+
+
 
 
 

@@ -34,5 +34,11 @@ namespace RaffleDisplayApplication
             get => ColorStrip.Background;
             set => ColorStrip.Background = value;
         }
+
+        public Brush ColorNameBrush
+        {
+            get => ColorNameText.Foreground;
+            set => ColorNameText.Foreground = value;
+        }
     }
 }

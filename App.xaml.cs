@@ -16,11 +16,7 @@ namespace RaffleDisplayApplication
         protected override void OnStartup(StartupEventArgs e)
         {
             base.OnStartup(e);
-
-            var inputWindow = new InputWindow();
-            inputWindow.Show();
+            // MainWindow will be shown by default if set in App.xaml
         }
-
     }
-
 }
