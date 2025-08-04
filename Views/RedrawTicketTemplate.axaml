@@ -1,0 +1,56 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="TicketDisplayAppModified.Views.RedrawTicketTemplate"
+             HorizontalAlignment="Stretch"
+             VerticalAlignment="Stretch"
+             MinWidth="240"
+             MinHeight="260">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="3*" />
+            <ColumnDefinition Width="80" />
+        </Grid.ColumnDefinitions>
+        <!-- Main ticket background and content -->
+        <Border Grid.Column="0"
+                Background="White"
+                CornerRadius="32,0,0,32"
+                Padding="0"
+                HorizontalAlignment="Stretch"
+                VerticalAlignment="Stretch">
+            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                <TextBlock 
+					       x:Name="RedrawingText"
+					       Text="Redrawing&#x0a;Ticket"
+                           FontSize="28"
+                           FontWeight="Bold"
+                           Foreground="Gray"
+                           HorizontalAlignment="Center"
+                           VerticalAlignment="Center"
+                           TextWrapping="Wrap"
+						   TextAlignment="Center"/>
+				
+                <TextBlock x:Name="EllipsisText"
+                           Text=""
+                           FontSize="80"
+                           FontWeight="Bold"
+                           Foreground="Gray"
+                           HorizontalAlignment="Center"
+                           Margin="0,-30,0,0"/>
+            </StackPanel>
+        </Border>
+        <Border Grid.Column="1"
+                Background="Gray"
+                CornerRadius="0,23,23,0"
+                HorizontalAlignment="Stretch"
+                VerticalAlignment="Stretch"/>
+        <!-- Overlay border (drawn on top) -->
+        <Border Grid.ColumnSpan="2"
+                BorderBrush="Gray"
+                BorderThickness="4"
+                CornerRadius="23"
+                Background="Transparent"
+                IsHitTestVisible="False"
+                ZIndex="1"
+                Opacity="1"/>
+    </Grid>
+</UserControl>
