@@ -137,9 +137,35 @@ public partial class MainWindow : Window
 
     private async Task RecogniseMessage(Newtonsoft.Json.Linq.JObject json)
     {
+        // 1. Check for the tuple-style "Context" field
         string context = json["Item2"]?.ToString() ?? "";
         await AppendLogAsync($"Context: {context}");
 
+        // FALLBACK: If Item2 is missing, check if this is a direct, raw TicketInfo message
+        if (string.IsNullOrEmpty(context) && json["SlotNumber"] != null)
+        {
+            try
+            {
+                var ticket = json.ToObject<TicketInfo>();
+                if (ticket != null)
+                {
+                    // Ensure SlotNumber is stored as a string internally, even if sent as a number
+                    ticket.SlotNumber = json["SlotNumber"]?.ToString();
+
+                    int slotIndex = ticket.SlotNumber == "1" ? 1 : 2;
+                    await ShowMainView(slotIndex, ticket);
+                    await AppendLogAsync($"Direct ticket info received for Slot {ticket.SlotNumber}: {ticket.Letter} {ticket.Number} {ticket.Color}");
+                    return;
+                }
+            }
+            catch (Exception ex)
+            {
+                await AppendLogAsync($"Direct Ticket parsing exception: {ex.Message}");
+                return;
+            }
+        }
+
+        // 2. Handle original wrapped Tuple formats ("Item1" & "Item2")
         if (context == "Prize")
         {
             string prize = json["Item1"]?.ToString() ?? "";
@@ -172,7 +198,11 @@ public partial class MainWindow : Window
                     return;
                 }
 
-                await ShowMainView(ticket.SlotNumber == "1" ? 1 : 2, ticket);
+                // Sync structural difference: force SlotNumber to string representation
+                ticket.SlotNumber = ticketToken["SlotNumber"]?.ToString();
+
+                int slotIndex = ticket.SlotNumber == "1" ? 1 : 2;
+                await ShowMainView(slotIndex, ticket);
                 await AppendLogAsync($"Ticket info received for Slot {ticket.SlotNumber}: {ticket.Letter} {ticket.Number} {ticket.Color}");
             }
             catch (Exception ex)
@@ -181,8 +211,10 @@ public partial class MainWindow : Window
             }
             return;
         }
-        await AppendLogAsync($"Unrecognized message: {json}");
+
+        await AppendLogAsync($"Unrecognized message format: {json}");
     }
+
 
     private async Task ShowMainView(int slot, TicketInfo ticket)
     {
@@ -249,6 +281,8 @@ public partial class MainWindow : Window
                 _prizeText.Text = prize;
         });
     }
+
+
 
     public async void OnDebugTicketClick(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
