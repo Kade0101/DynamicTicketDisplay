@@ -1,17 +1,25 @@
 ﻿using Avalonia;
+using Avalonia.Animation;
 using Avalonia.Animation.Easings;
 using Avalonia.Controls;
+using Avalonia.Controls.Shapes;
 using Avalonia.Markup.Xaml;
+using Avalonia.Media;
+using Avalonia.Platform;
+using Avalonia.Skia;
+using Avalonia.Styling;
 using Avalonia.Threading;
+using Newtonsoft.Json;
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
+using System.Linq;
 using System.Net;
 using System.Net.Sockets;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
-using System;
-using Newtonsoft.Json;
-using Avalonia.Media;
-using Avalonia.Controls.Shapes;
-using System.Linq;
 
 namespace TicketDisplayAppModified.Views;
 
@@ -22,22 +30,28 @@ public partial class MainWindow : Window
     private TicketTemplate? _mainView2;
     private TextBlock? _logTextBlock;
 
-    // Rename one of the fields to resolve the ambiguity
     private ContentControl? _ticketSlot1;
     private ContentControl? _ticketSlot2;
     private Canvas? _overlayCanvas;
+    private TextBlock? _prizeText;
+
+    private readonly List<double> _frameDtsMs = new(180);
+
+    private readonly string _logFilePath = System.IO.Path.Combine(
+        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+        "TicketApp", "ticketapp.log");
+
+    private const bool RequireGpu = true;
+
+    // NEW: animation service
+    private MainWindowAnimationService _animations = null!;
 
     public MainWindow()
     {
         InitializeComponent();
-        this.WindowState = WindowState.FullScreen;
-        this.KeyDown += (s, e) =>
-        {
-            if (e.Key == Avalonia.Input.Key.Escape)
-            {
-                this.Close();
-            }
-        };
+        WindowState = WindowState.FullScreen;
+        KeyDown += (s, e) => { if (e.Key == Avalonia.Input.Key.Escape) Close(); };
+        _animations = new MainWindowAnimationService(this);
         StartTcpServer();
     }
 
@@ -49,7 +63,18 @@ public partial class MainWindow : Window
         _ticketSlot2 = this.FindControl<ContentControl>("TicketSlot2");
         _overlayCanvas = this.FindControl<Canvas>("OverlayCanvas");
         DarkOverlay = this.FindControl<Border>("DarkOverlay");
+        _prizeText = this.FindControl<TextBlock>("PrizeText");
+        _mainView2 = this.FindControl<TicketTemplate>("MainView2");
+        _mainView1 = this.FindControl<TicketTemplate>("MainView1");
     }
+
+    // INTERNAL ACCESSORS for animation service
+    internal Border? DarkOverlayRef => DarkOverlay;
+    internal Canvas? OverlayCanvasRef => _overlayCanvas;
+    internal ContentControl? TicketSlot1Ref => _ticketSlot1;
+    internal ContentControl? TicketSlot2Ref => _ticketSlot2;
+    internal void SetMainView1(TicketTemplate t) => _mainView1 = t;
+    internal void SetMainView2(TicketTemplate t) => _mainView2 = t;
 
     public async Task AppendLogAsync(string message)
     {
@@ -84,48 +109,24 @@ public partial class MainWindow : Window
             if (bytesRead > 0)
             {
                 var message = Encoding.UTF8.GetString(buffer, 0, bytesRead).Trim();
+                await AppendLogAsync(message);
 
                 await Dispatcher.UIThread.InvokeAsync(async () =>
                 {
-                    // Try to parse as JSON first
                     try
                     {
                         var json = Newtonsoft.Json.Linq.JObject.Parse(message);
-                        var ticket = json.ToObject<TicketInfo>();
-                        if (string.IsNullOrEmpty(ticket.Letter) || string.IsNullOrEmpty(ticket.Number) || string.IsNullOrEmpty(ticket.Color))
-                        {
-                            OnClearTicketsClick(null, null);
-                            return;
-                        }
-                        int slot = json.Value<int?>("SlotNumber") ?? 1;
-
-                        if (slot == 1)
-                        {
-                            ShowMainView(1);
-                            _mainView1?.UpdateTicket(ticket);
-                            await AppendLogAsync($"Received ticket for Slot 1: {ticket.Letter} {ticket.Number} {ticket.Color}");
-                        }
-                        else if (slot == 2)
-                        {
-                            ShowMainView(2);
-                            _mainView2?.UpdateTicket(ticket);
-                            await AppendLogAsync($"Received ticket for Slot 2: {ticket.Letter} {ticket.Number} {ticket.Color}");
-                        }
+                        await RecogniseMessage(json);
                     }
-                    catch (Newtonsoft.Json.JsonException)
+                    catch (Newtonsoft.Json.JsonException ex)
                     {
-                        // Not JSON, treat as plain string
-                        await AppendLogAsync($"Received message: {message}");
+                        await AppendLogAsync($"Invalid JSON Exception: {ex.Message}");
 
-                        // Optionally, update UI or handle the string as needed
                         Dispatcher.UIThread.Post(() =>
                         {
-                            // Assuming PrizeText is a TextBlock in your XAML
-                            var prizeText = this.FindControl<TextBlock>("PrizeText");
-                            if (prizeText != null)
+                            if (_prizeText != null)
                             {
-                                // Update the PrizeText with the received message
-                                prizeText.Text = message;
+                                _prizeText.Text = message;
                             }
                         });
                     }
@@ -134,29 +135,75 @@ public partial class MainWindow : Window
         }
     }
 
-    private async Task ShowMainView(int slot)
+    private async Task RecogniseMessage(Newtonsoft.Json.Linq.JObject json)
+    {
+        string context = json["Item2"]?.ToString() ?? "";
+        await AppendLogAsync($"Context: {context}");
+
+        if (context == "Prize")
+        {
+            string prize = json["Item1"]?.ToString() ?? "";
+            UpdatePrize(prize);
+            await AppendLogAsync($"Prize updated: {prize}");
+            return;
+        }
+        else if (context == "Clear")
+        {
+            HideMainView(1);
+            HideMainView(2);
+            await AppendLogAsync("All tickets cleared.");
+            return;
+        }
+        else if (context == "TicketInfo")
+        {
+            try
+            {
+                var ticketToken = json["Item1"];
+                if (ticketToken == null)
+                {
+                    await AppendLogAsync("TicketInfo: Item1 is missing in JSON.");
+                    return;
+                }
+
+                var ticket = ticketToken.ToObject<TicketInfo>();
+                if (ticket == null)
+                {
+                    await AppendLogAsync("TicketInfo: Failed to parse Item1 as TicketInfo.");
+                    return;
+                }
+
+                await ShowMainView(ticket.SlotNumber == "1" ? 1 : 2, ticket);
+                await AppendLogAsync($"Ticket info received for Slot {ticket.SlotNumber}: {ticket.Letter} {ticket.Number} {ticket.Color}");
+            }
+            catch (Exception ex)
+            {
+                await AppendLogAsync($"TicketInfo: Exception - {ex.Message}");
+            }
+            return;
+        }
+        await AppendLogAsync($"Unrecognized message: {json}");
+    }
+
+    private async Task ShowMainView(int slot, TicketInfo ticket)
     {
         if (slot == 1 && !(_ticketSlot1.Content is TicketTemplate))
         {
             if (_ticketSlot1.Content is RedrawTicketTemplate) _ticketSlot1.Content = null;
             _mainView1 = new TicketTemplate(this);
-            await AnimateTicketToSlot(_mainView1, 1);
-
-            // 5 second delay after slot 1 animation
+            _mainView1?.UpdateTicket(ticket);
+            await _animations.AnimateTicketToSlotAsync(_mainView1, 1);
             await Task.Delay(5000);
         }
         else if (slot == 2 && !(_ticketSlot2.Content is TicketTemplate))
         {
             if (_ticketSlot2.Content is RedrawTicketTemplate) _ticketSlot2.Content = null;
             _mainView2 = new TicketTemplate(this);
-            await AnimateTicketToSlot(_mainView2, 2);
-
-            // 5 second delay after slot 1 animation
+            _mainView2?.UpdateTicket(ticket);
+            await _animations.AnimateTicketToSlotAsync(_mainView2, 2);
             await Task.Delay(5000);
         }
-        _ = AppendLogAsync($"Showing main view for Slot {slot}");
     }
-    
+
     private void HideMainView(int slot)
     {
         if (slot == 1 && _mainView1 != null)
@@ -173,7 +220,7 @@ public partial class MainWindow : Window
 
     public async Task SetSshStatus(bool connected)
     {
-        await Task.Delay(500); // 500 ms delay
+        await Task.Delay(200);
         await Dispatcher.UIThread.InvokeAsync(() =>
         {
             var indicator = this.FindControl<Ellipse>("SshStatusIndicator");
@@ -193,101 +240,90 @@ public partial class MainWindow : Window
         public string? Color { get; set; }
         public string? SlotNumber { get; set; }
     }
+
     public void UpdatePrize(string prize)
     {
         Dispatcher.UIThread.Post(() =>
         {
-                PrizeText.Text = prize;
+            if (_prizeText != null)
+                _prizeText.Text = prize;
         });
-    }
-    public async Task SimulateWorkAsync()
-    {
-        await AppendLogAsync("Waiting...");
-        await Task.Delay(1000); // Simulate work or waiting
-        await AppendLogAsync("Done!");
     }
 
     public async void OnDebugTicketClick(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
-        var ticket = new TicketInfo
-        {
-            Letter = "A",
-            Number = "13",
-            Color = "#FF0000",
-            SlotNumber = "1"
-        };
-        
+        var ticket = new TicketInfo { Letter = "A", Number = "13", Color = "#FF0000", SlotNumber = "1" };
         _mainView1?.UpdateTicket(ticket);
-        ShowMainView(1);
+        ShowMainView(1, ticket);
         await AppendLogAsync("Debug ticket created in Slot 1.");
     }
+
     public async void OnDebugTicket2Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
-        var ticket = new TicketInfo
-        {
-            Letter = "B",
-            Number = "42",
-            Color = "#00FF00",
-            SlotNumber = "2"
-        };
-        
+        var ticket = new TicketInfo { Letter = "B", Number = "42", Color = "#00FF00", SlotNumber = "2" };
         _mainView2?.UpdateTicket(ticket);
-        ShowMainView(2);
+        ShowMainView(2, ticket);
         await AppendLogAsync("Debug ticket created in Slot 2.");
     }
+
     public async void OnClearTicketsClick(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
         HideMainView(1);
         HideMainView(2);
         await AppendLogAsync("Cleared all tickets.");
     }
+
     public async void OnRedrawTickets1Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
         RedrawTicket();
     }
+
     public async void RedrawTicket(int slot = 1)
     {
         if (_mainView1 == null) return;
 
         if (slot == 1)
         {
-            _ticketSlot1.Content = null; // Clear the slot content
+            _ticketSlot1.Content = null;
             _ticketSlot1.Content = _mainView1.RedrawTicket();
             await AppendLogAsync("Redrawing ticket in Slot 1.");
         }
         else if (slot == 2)
         {
-            _ticketSlot2.Content = null; // Clear the slot content
+            _ticketSlot2.Content = null;
             _ticketSlot2.Content = _mainView2.RedrawTicket();
             await AppendLogAsync("Redrawing ticket in Slot 2.");
         }
-
-
     }
-    private void RemoveTicketFromParent(TicketTemplate ticket)
+
+    private void RemoveTicketFromParent(TicketTemplate ticketTemplate)
     {
-        // Remove ticket from any previous parent before adding to overlay
-        if (ticket.Parent is Panel oldPanel)
-            oldPanel.Children.Remove(ticket);
-        else if (ticket.Parent is ContentControl oldContent)
+        if (ticketTemplate.Parent is Panel oldPanel)
+            oldPanel.Children.Remove(ticketTemplate);
+        else if (ticketTemplate.Parent is ContentControl oldContent)
             oldContent.Content = null;
-        else if (ticket.Parent is Decorator oldDecorator)
+        else if (ticketTemplate.Parent is Decorator oldDecorator)
             oldDecorator.Child = null;
-        else if (ticket.Parent != null)
+        else if (ticketTemplate.Parent != null)
             throw new InvalidOperationException("TicketTemplate is already attached to an unsupported parent type.");
     }
 
     private (double initialWidth, double initialHeight, double initialX, double initialY) GetInitialTicketParams(TicketTemplate ticket)
     {
-        // Now get the correct initial size and position
-        double initialWidth = ticket.Bounds.Width *2 ;
-        double initialHeight = ticket.Bounds.Height *2 ;
+        double initialWidth = this.Bounds.Width * 0.3;
+        double initialHeight = this.Bounds.Height * 0.5;
         double initialX = (this.Bounds.Width - initialWidth) / 2;
-        double initialY = ((this.Bounds.Height - initialHeight) / 2);
+        double initialY = (this.Bounds.Height - initialHeight) / 2;
+
         ticket.Width = initialWidth;
         ticket.Height = initialHeight;
         Canvas.SetLeft(ticket, initialX);
         Canvas.SetTop(ticket, initialY);
+
+        // One-time sizing for internals
+        double fontScale = initialWidth / 240.0;
+        ticket.SetColourStripScale(fontScale + 1);
+
         return (initialWidth, initialHeight, initialX, initialY);
     }
 
@@ -300,107 +336,149 @@ public partial class MainWindow : Window
         if (borderPos == null)
             throw new InvalidOperationException("Could not determine border position.");
 
-        double targetWidth = slotControl.Bounds.Width;    // Use slot's actual width
-        double targetHeight = slotControl.Bounds.Height;  // Use slot's actual height
+        double targetWidth = slotControl.Bounds.Width;
+        double targetHeight = slotControl.Bounds.Height;
         double targetX = borderPos.Value.X + (targetBorder.Bounds.Width - targetWidth) / 2;
         double targetY = borderPos.Value.Y + ((targetBorder.Bounds.Height - targetHeight) / 2);
         return (targetWidth, targetHeight, targetX, targetY);
     }
 
-    private async Task FadeOverlayAsync(double from, double to, int duration)
+    private static void EnsureTransition(Animatable target, AvaloniaProperty<double> prop, int durationMs, Easing? easing = null)
     {
-        if (DarkOverlay != null)
+        target.Transitions ??= new Transitions();
+        var t = target.Transitions.OfType<DoubleTransition>().FirstOrDefault(x => x.Property == prop);
+        if (t == null)
         {
-            int steps = 30;
-            double step = (to - from) / steps;
-            for (int i = 0; i <= steps; i++)
+            target.Transitions.Add(new DoubleTransition
             {
-                double opacity = from + step * i;
-                DarkOverlay.Opacity = opacity;
-                await Task.Delay(duration / steps);
-            }
-            DarkOverlay.Opacity = to; // Ensure final value
+                Property = prop,
+                Duration = TimeSpan.FromMilliseconds(durationMs),
+                Easing = easing ?? new SineEaseInOut()
+            });
+        }
+        else
+        {
+            t.Duration = TimeSpan.FromMilliseconds(durationMs);
+            t.Easing = easing ?? new SineEaseInOut();
         }
     }
 
-    private async Task AnimateTicketAndSizeAsync(TicketTemplate ticket, Border shadow, double initialWidth, double initialHeight, double initialX, double initialY, double targetWidth, double targetHeight, double targetX, double targetY, int duration, int steps)
+    private async Task AnimateTransformToSlotAsync(Control target,
+        double initialWidth, double initialHeight, double initialX, double initialY,
+        double targetWidth, double targetHeight, double targetX, double targetY,
+        int durationMs)
     {
-        // Animate position and size (lerp)
-        for (int i = 0; i <= steps; i++)
+        // Ensure transform group with scale + translate
+        var group = target.RenderTransform as TransformGroup ?? new TransformGroup();
+        var scale = group.Children.OfType<ScaleTransform>().FirstOrDefault() ?? new ScaleTransform(1, 1);
+        var translate = group.Children.OfType<TranslateTransform>().FirstOrDefault() ?? new TranslateTransform(0, 0);
+        if (!group.Children.Contains(scale)) group.Children.Insert(0, scale);
+        if (!group.Children.Contains(translate)) group.Children.Add(translate);
+        target.RenderTransform = group;
+        target.RenderTransformOrigin = new RelativePoint(0, 0, RelativeUnit.Relative);
+
+        // Set initial layout once
+        target.Width = initialWidth;
+        target.Height = initialHeight;
+        Canvas.SetLeft(target, initialX);
+        Canvas.SetTop(target, initialY);
+
+        double sx = targetWidth / initialWidth;
+        double sy = targetHeight / initialHeight;
+        double dx = targetX - initialX;
+        double dy = targetY - initialY;
+
+        await Dispatcher.UIThread.InvokeAsync(() =>
         {
+            // Start state
+            scale.ScaleX = 1d;
+            scale.ScaleY = 1d;
+            translate.X = 0d;
+            translate.Y = 0d;
 
-            double t = (double)i / steps;
-            double eased = new SineEaseInOut().Ease(t);
+            // Transitions
+            EnsureTransition(scale, ScaleTransform.ScaleXProperty, durationMs, new SineEaseInOut());
+            EnsureTransition(scale, ScaleTransform.ScaleYProperty, durationMs, new SineEaseInOut());
+            EnsureTransition(translate, TranslateTransform.XProperty, durationMs, new SineEaseInOut());
+            EnsureTransition(translate, TranslateTransform.YProperty, durationMs, new SineEaseInOut());
 
-            double w = initialWidth + (targetWidth - initialWidth) * eased;
-            double h = initialHeight + (targetHeight - initialHeight) * eased;
+            // final
+            scale.ScaleX = sx;
+            scale.ScaleY = sy;
+            translate.X = dx;
+            translate.Y = dy;
+        }, DispatcherPriority.Render);
 
-            double x = initialX + (targetX - initialX) * eased;
-            double y = initialY + (targetY - initialY) * eased;
+        await Task.Delay(durationMs + 16).ConfigureAwait(false);
+    }
 
-            ticket.Width = w;
-            ticket.Height = h;
-            Canvas.SetLeft(ticket, x);
-            Canvas.SetTop(ticket, y);
-
-            // Calculate scale based on width (or height)
-            double fontScale = w / 240.0; // 240 is your base MinWidth
-            ticket.SetFontScale(fontScale);
-            ticket.SetColourStripScale((fontScale + 1));
-
-            await Task.Delay(duration / steps);
-        }
+    // Old method kept for signature compatibility but now calls the transition-based path
+    private async Task AnimateTicketAndSizeAsync(
+        TicketTemplate ticket,
+        Border _,
+        double initialWidth, double initialHeight, double initialX, double initialY,
+        double targetWidth, double targetHeight, double targetX, double targetY,
+        int duration, int steps)
+    {
+        await AnimateTransformToSlotAsync(ticket, initialWidth, initialHeight, initialX, initialY, targetWidth, targetHeight, targetX, targetY, duration);
     }
 
     public async Task AnimateTicketToSlot(TicketTemplate ticket, int slot)
     {
-        // Fade in overlay BEFORE ticket appears
-        await FadeOverlayAsync(0, 1, 100);
+        // darkens background
+        await _animations.FadeOverlayAsync(0, 0.3, 100);
 
+        // Detach from any existing parent
         RemoveTicketFromParent(ticket);
 
-        // Add ticket to overlay in the center
-        ticket.Opacity = 0; // Start invisible
-        _overlayCanvas.Children.Add(ticket);
+        // Add ticket to overlay in the center (changes the parent)
+        ticket.Opacity = 0;
+        if (_overlayCanvas != null)
+        {
+            _overlayCanvas.Children.Add(ticket);
+        }
+        else
+        {
+            throw new InvalidOperationException("_overlayCanvas is not initialized.");
+        }
 
-        // Wait for layout to update so Bounds are valid
-        await Dispatcher.UIThread.InvokeAsync(() => { }, DispatcherPriority.Render);
-        await Dispatcher.UIThread.InvokeAsync(() => { }, DispatcherPriority.Render);
+        // Layout ready
+        await Dispatcher.UIThread.InvokeAsync(() => { }, DispatcherPriority.Render); // These two lines lets the UI thread finish its cycle before it measures positions
+        await Dispatcher.UIThread.InvokeAsync(() => { }, DispatcherPriority.Render); // Second pass to ensure layout is stable
 
         var (initialWidth, initialHeight, initialX, initialY) = GetInitialTicketParams(ticket);
 
-        // Pause in the center
-        ticket.Opacity = 1; // Show the ticket
-        await Task.Delay(3000);
+        // Show it and play enlarge-in-center
+        ticket.Opacity = 1;
+        await _animations.EnlargeInCenterAsync(ticket, 250, 0.7);
 
-        // Find the target slot's ContentControl
+        // Resolve target
         var slotControl = slot == 1 ? _ticketSlot1 : _ticketSlot2;
         if (slotControl == null)
             throw new InvalidOperationException("Slot control is not initialized.");
-
-        // The border is the parent of the slot control
         if (slotControl.Parent is not Border targetBorder)
             throw new InvalidOperationException("Slot control is not inside a Border.");
 
         await Dispatcher.UIThread.InvokeAsync(() => { }, DispatcherPriority.Render);
-
         var (targetWidth, targetHeight, targetX, targetY) = GetTargetSlotParams(slotControl);
 
-        int duration = 600; // keep the same duration, or increase for slower animation
-        int steps = 80;     // double the number of frames for smoother animation
-        await AnimateTicketAndSizeAsync(ticket, targetBorder, initialWidth, initialHeight, initialX, initialY, targetWidth, targetHeight, targetX, targetY, duration, steps);
+        // Travel to slot via transform animation
+        int duration = 600;
+        await AnimateTicketAndSizeAsync(ticket, targetBorder, initialWidth, initialHeight, initialX, initialY, targetWidth, targetHeight, targetX, targetY, duration, 0);
 
         // Remove from overlay and set as slot content
         _overlayCanvas.Children.Remove(ticket);
 
+        // Reset transform before attaching to the slot
+        ticket.RenderTransform = null;
 
-
-        // Set the ticket's Width/Height to match the slot's before adding to the slot
-        slotControl = slot == 1 ? _ticketSlot1 : _ticketSlot2;
+        // Match the slot size and update visuals once
         if (slotControl != null)
         {
             ticket.Width = slotControl.Bounds.Width;
             ticket.Height = slotControl.Bounds.Height;
+            ticket.SetFontScale();
+            ticket.SetColourStripScale((ticket.Width / 240.0) + 1);
         }
 
         if (slot == 1)
@@ -414,21 +492,9 @@ public partial class MainWindow : Window
             _ticketSlot2.Content = ticket;
         }
 
-        // Hide the dark overlay after animation
-        if (DarkOverlay != null)
-        {
-            int fadeSteps = 30;
-            int fadeDuration = 500; // ms
-            for (int i = 0; i <= fadeSteps; i++)
-            {
-                double t = (double)i / fadeSteps;
-                double eased = new SineEaseInOut().Ease(1 - t); // 1 -> 0
-                DarkOverlay.Opacity = eased;
-                await Task.Delay(fadeDuration / fadeSteps);
-            }
-            DarkOverlay.Opacity = 0; // Ensure it's fully hidden
-        }
-        // Wait for layout to update in the new parent, then clear explicit size
+        // Fade out overlay
+        await _animations.FadeOverlayAsync(0.3, 0, 120);
+
         await Dispatcher.UIThread.InvokeAsync(() => { }, DispatcherPriority.Render);
     }
 }

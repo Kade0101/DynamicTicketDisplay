@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "TicketDisplayAppModified": {
+      "commandName": "Project",
+      "workingDirectory": "C:\\Users\\kadeg\\source\\repos\\TicketDisplay_Server"
+    }
+  }
+}

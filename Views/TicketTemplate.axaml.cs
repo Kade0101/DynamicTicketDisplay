@@ -8,11 +8,15 @@ using Avalonia;
 using Avalonia.Styling;
 using System.Threading.Tasks;
 using System.Diagnostics;
+using Avalonia.Markup.Xaml;
+using System.Linq; // added
 
 namespace TicketDisplayAppModified.Views
 {
     public partial class TicketTemplate : UserControl
     {
+        private const double BaseWidth = 240.0; // Set this to your design's base ticket width
+
         private bool _hasAnimated = false;
 
         public MainWindow MainWindow { get; }
@@ -24,13 +28,17 @@ namespace TicketDisplayAppModified.Views
 
             this.AttachedToVisualTree += async (_, __) =>
             {
+                if (RootGrid != null)
+                {
+                    RootGrid.Opacity = 1;
+                }
+
                 if (!_hasAnimated)
                 {
                     _hasAnimated = true;
                     await PlayShowAnimationAsync();
                 }
             };
-            RootGrid.Opacity = 1;
         }
 
         public void UpdateMessage(string message)
@@ -74,56 +82,84 @@ namespace TicketDisplayAppModified.Views
             };
         }
 
+        // Small helper to add/update a transition on an animatable target
+        private static void EnsureTransition(Animatable target, AvaloniaProperty<double> prop, int durationMs, Easing? easing = null)
+        {
+            target.Transitions ??= new Transitions();
+            var t = target.Transitions.OfType<DoubleTransition>().FirstOrDefault(x => x.Property == prop);
+            if (t == null)
+            {
+                target.Transitions.Add(new DoubleTransition
+                {
+                    Property = prop,
+                    Duration = TimeSpan.FromMilliseconds(durationMs),
+                    Easing = easing ?? new SineEaseInOut()
+                });
+            }
+            else
+            {
+                t.Duration = TimeSpan.FromMilliseconds(durationMs);
+                t.Easing = easing ?? new SineEaseInOut();
+            }
+        }
+
         public async Task PlayShowAnimationAsync()
         {
             if (this.FindControl<Grid>("RootGrid") is not Grid root)
                 return;
 
-            // Always assign a ScaleTransform if not present
-            if (root.RenderTransform is not ScaleTransform scale)
+            // Transform-only intro (no per-frame loops)
+            var group = root.RenderTransform as TransformGroup ?? new TransformGroup();
+            var scale = group.Children.OfType<ScaleTransform>().FirstOrDefault();
+            if (scale is null)
             {
-                scale = new ScaleTransform(0, 0); // Start at 0
-                root.RenderTransform = scale;
-                root.RenderTransformOrigin = new RelativePoint(0.5, 0.5, RelativeUnit.Relative);
+                scale = new ScaleTransform(1, 1);
+                group.Children.Add(scale);
             }
-            else
+            root.RenderTransform = group;
+            root.RenderTransformOrigin = new RelativePoint(0.5, 0.5, RelativeUnit.Relative);
+
+            int duration = 250;
+
+            await Dispatcher.UIThread.InvokeAsync(() =>
             {
-                scale.ScaleX = scale.ScaleY = 0; // Reset to 0 if already present
-            }
+                // Start smaller and transparent
+                root.Opacity = 0;
+                scale.ScaleX = 0.7;
+                scale.ScaleY = 0.7;
 
-            var duration = 400;
-            var steps = 90; // smoother
+                // Animate to full size/opacity via transitions (render-loop driven)
+                EnsureTransition(root, Visual.OpacityProperty, duration, new SineEaseInOut());
+                EnsureTransition(scale, ScaleTransform.ScaleXProperty, duration, new SineEaseInOut());
+                EnsureTransition(scale, ScaleTransform.ScaleYProperty, duration, new SineEaseInOut());
 
-            // Set initial state
-            root.Opacity = 0;
-            scale.ScaleX = scale.ScaleY = 0; // Start at 0
+                root.Opacity = 1;
+                scale.ScaleX = 1;
+                scale.ScaleY = 1;
+            }, DispatcherPriority.Render);
 
-            // Animate: simple ease (0 -> 1)
-            for (int i = 0; i <= steps; i++)
-            {
-                double t = (double)i / steps;
-                double eased = new SineEaseInOut().Ease(t);
-                root.Opacity = eased;
-                scale.ScaleX = scale.ScaleY = eased;
-                SetColourStripScale((scale.ScaleX + 2)); // Optional
-                SetFontScale(scale.ScaleX + 1); // Optional
-                await Task.Delay(duration / steps);
-            }
+            // Let the transition finish without blocking UI each frame
+            await Task.Delay(duration + 16);
 
-            // Ensure final state
-            root.Opacity = 1;
-            scale.ScaleX = scale.ScaleY = 1;
+            // Apply size-dependent layout once (avoid per-frame churn)
+            SetFontScale();
+            SetColourStripScale((this.Width <= 0 ? 1 : this.Width / BaseWidth) + 1);
         }
 
         private double _lastColorNameFont = -1;
         private double _lastLetterFont = -1;
         private double _lastRaffleFont = -1;
 
-        public void SetFontScale(double scale)
+        // Call this whenever the ticket's size changes
+        public void SetFontScale()
         {
-            double colorNameFont = Math.Round(24 * scale, 1);
-            double letterFont = Math.Round(54 * scale, 1);
-            double raffleFont = Math.Round(62 * scale, 1);
+            // Calculate scale based on current width
+            double scale = this.Width / BaseWidth;
+
+            // Use base font sizes and scale them
+            double colorNameFont = Math.Round(24 * scale, 1);   // Example base size: 24
+            double letterFont = Math.Round(54 * scale, 1);      // Example base size: 54
+            double raffleFont = Math.Round(62 * scale, 1);      // Example base size: 62
 
             if (Math.Abs(colorNameFont - _lastColorNameFont) > 0.05)
             {
@@ -144,7 +180,6 @@ namespace TicketDisplayAppModified.Views
 
         public void SetColourStripScale(double scale)
         {
-
             // Assuming your grid is named "RootGrid" and the inner grid is the first child
             var innerGrid = RootGrid.Children[0] as Grid;
             var newWidth = 40 * scale;
