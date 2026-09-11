@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -16,11 +16,10 @@ using System.Windows.Shapes;
 
 namespace RaffleDisplayApplication
 {
-    /// <summary>
-    /// Interaction logic for MainWindow.xaml
-    /// </summary>
+
     public partial class MainWindow : Window
     {
+        private string ipAddress = "127.0.0.1";
         public MainWindow()
         {
             InitializeComponent();
@@ -120,7 +119,7 @@ namespace RaffleDisplayApplication
         }
         private async void ShowOnTV_Click(object sender, RoutedEventArgs e)
         {
-            string piIp = "192.168.1.80"; // Replace with your Pi's IP
+            string piIp = ipAddress; // Replace with your Pi's IP
             int port = 5000;
 
             if (TicketSlot1.Content == null || TicketSlot2.Content == null)
@@ -180,7 +179,7 @@ namespace RaffleDisplayApplication
 
         private async void ClearScreenOnTV_Click(object sender, RoutedEventArgs e)
         {
-            string piIp = "192.168.1.80"; // Use your Pi's IP
+            string piIp = ipAddress; // Use your Pi's IP
             int port = 5000;
 
             // Option 1: If your protocol supports a special TicketInfo for clearing
