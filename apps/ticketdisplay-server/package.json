@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "TicketDisplay server workspace",
   "scripts": {
-    "test": "node -e \"console.log('No tests configured for ticketdisplay-server yet')\""
+    "test": "node -e \"console.error('No tests configured for ticketdisplay-server yet'); process.exit(1)\""
   },
   "license": "MIT"
 }
