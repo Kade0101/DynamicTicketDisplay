@@ -1,0 +1,9 @@
+{
+  "name": "ticketdisplay-server",
+  "version": "1.0.0",
+  "description": "TicketDisplay server workspace",
+  "scripts": {
+    "test": "echo \"No tests configured for ticketdisplay-server yet\""
+  },
+  "license": "MIT"
+}

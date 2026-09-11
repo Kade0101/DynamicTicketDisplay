@@ -1,0 +1,18 @@
+{
+  "name": "dynamicticketdisplay",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Monorepo for TicketDisplay server and client",
+  "scripts": {
+    "test": "npm run test --workspaces --if-present"
+  },
+  "workspaces": [
+    "apps/ticketdisplay-server",
+    "apps/ticketdisplay-client"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "http://localhost:26831/Kade0101/DynamicTicketDisplay"
+  },
+  "license": "MIT"
+}
