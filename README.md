@@ -15,4 +15,4 @@ From the repository root:
 npm test
 ```
 
-No workspace test suites are configured yet, so this currently performs no workspace test runs.
+No workspace test suites are configured yet, so this currently prints a reminder message.
