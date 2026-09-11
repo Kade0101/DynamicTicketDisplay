@@ -4,7 +4,7 @@
   "version": "1.0.0",
   "description": "Monorepo for TicketDisplay server and client",
   "scripts": {
-    "test": "npm run test --workspaces --if-present --include-workspace-root=false"
+    "test": "npm run --workspaces --if-present --include-workspace-root=false test"
   },
   "workspaces": [
     "apps/ticketdisplay-server",
