@@ -15,4 +15,4 @@ From the repository root:
 npm test
 ```
 
-No workspace test suites are configured yet. Each workspace currently exits with a reminder message, so the root `npm test` command fails after running both workspace test commands.
+No workspace test suites are configured yet. Each workspace currently prints a reminder message when `npm test` is run from the repository root.
