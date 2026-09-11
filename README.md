@@ -15,5 +15,4 @@ From the repository root:
 npm test
 ```
 
-No workspace test suites are configured yet, so this currently prints a reminder message.
-The command currently exits with a non-zero status until real tests are added.
+No workspace test suites are configured yet. The command prints a reminder and exits with a non-zero status until real tests are added.
