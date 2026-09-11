@@ -4,7 +4,7 @@
   "version": "1.0.0",
   "description": "Monorepo for TicketDisplay server and client",
   "scripts": {
-    "test": "node -e \"console.error('No workspace test suites are configured yet'); process.exit(1)\""
+    "test": "npm run test -w ticketdisplay-server -w ticketdisplay-client"
   },
   "workspaces": [
     "apps/ticketdisplay-server",
