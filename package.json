@@ -4,7 +4,7 @@
   "version": "1.0.0",
   "description": "Monorepo for TicketDisplay server and client",
   "scripts": {
-    "test": "npm run test -w apps/ticketdisplay-server && npm run test -w apps/ticketdisplay-client && node -e \"console.error('No workspace test suites are configured yet'); process.exit(1)\""
+    "test": "node -e \"const { spawnSync } = require('node:child_process'); const npmCmd = process.platform === 'win32' ? 'npm.cmd' : 'npm'; for (const workspace of ['apps/ticketdisplay-server', 'apps/ticketdisplay-client']) { spawnSync(npmCmd, ['run', 'test', '-w', workspace], { stdio: 'inherit' }); } console.error('No workspace test suites are configured yet'); process.exit(1);\""
   },
   "workspaces": [
     "apps/ticketdisplay-server",
