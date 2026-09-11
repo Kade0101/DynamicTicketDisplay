@@ -1,0 +1,66 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="TicketDisplayAppModified.Views.TicketTemplate"
+             HorizontalAlignment="Stretch"
+             VerticalAlignment="Stretch"
+             MinWidth="240"
+             MinHeight="260">
+    <Grid x:Name="RootGrid">
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="3*" />
+                <ColumnDefinition Width="60" />
+            </Grid.ColumnDefinitions>
+            <!-- Main ticket background and content -->
+            <Border Grid.Column="0"
+                    Background="White"
+                    CornerRadius="32,0,0,32"
+                    Padding="0"
+                    HorizontalAlignment="Stretch"
+                    VerticalAlignment="Stretch">
+                <StackPanel HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                    <TextBlock x:Name="ColorNameText"
+                               Text="GREY"
+                               Margin="0,30,0,10"
+                               HorizontalAlignment="Center"
+                               FontSize="24"
+                               FontWeight="Bold"
+                               Foreground="Gray" />
+                    <TextBlock x:Name="LetterText"
+                               Text="A"
+                               Margin="0,30,0,-70"
+                               HorizontalAlignment="Center"
+                               FontSize="54"
+                               FontWeight="Bold"
+                               FontFamily="Segoe UI Black"
+                               Foreground="Gray" />
+                    <TextBlock x:Name="RaffleText"
+                               Text="123"
+                               HorizontalAlignment="Center"
+                               FontSize="62"
+                               FontWeight="Bold"
+                               FontFamily="Segoe UI Black"
+                               Margin="0,0,0,0"
+                               Foreground="Gray" />
+                </StackPanel>
+            </Border>
+            <Border x:Name="ColorStrip"
+                    Grid.Column="1"
+                    Background="Gray"
+                    CornerRadius="0,23,23,0"
+                    HorizontalAlignment="Stretch"
+                    VerticalAlignment="Stretch"
+                    />
+            <!-- Overlay border (drawn on top) -->
+            <Border x:Name="OverlayBorder"
+                    Grid.ColumnSpan="2"
+                    BorderBrush="Gray"
+                    BorderThickness="4"
+                    CornerRadius="23"
+                    Background="Transparent"
+                    IsHitTestVisible="False"
+                    ZIndex="1"
+                    Opacity="1"/>
+        </Grid>
+    </Grid>
+</UserControl>

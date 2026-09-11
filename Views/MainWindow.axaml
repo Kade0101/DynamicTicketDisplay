@@ -1,0 +1,127 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="TicketDisplayAppModified.Views.MainWindow"
+        Title="Raffle Display"
+        Width="800" Height="450">
+    <Grid>
+        <!-- Patterned background image 
+        <Image Source="C:\Users\kadeg\Source\Repos\TicketDisplay_Server\Assets\arrowdark.png"
+               Stretch="UniformToFill"
+               Opacity="1"
+               IsHitTestVisible="False"/>-->
+
+        <!-- White bar at the top, not touching top or sides -->
+        <Border Background="#f0f4fa"
+                CornerRadius="16"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Top"
+                Margin="40,48,40,0"
+                Height="130"
+                Width="600"
+                ZIndex="10">
+            <TextBlock x:Name="PrizeText"
+                       Text="2x Meat Trays"
+                       VerticalAlignment="Center"
+                       HorizontalAlignment="Center"
+                       FontSize="80"
+                       Foreground="Black"
+                       FontWeight="Bold"/>
+        </Border>
+
+        <DockPanel>
+            <!-- Bottom Bar -->
+            <Border DockPanel.Dock="Bottom" Background="#ECECEC" Height="48">
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Stretch" Margin="8,0">
+                    <TextBlock Text="Version 1.2.8"
+                               VerticalAlignment="Center"
+                               HorizontalAlignment="Left"
+                               FontSize="13"
+                               Foreground="Black"/>
+
+                    <Ellipse x:Name="SshStatusIndicator" Width="16" Height="16" Fill="Red" Margin="8,0,0,0"/>
+                    <Button Content="Debug Ticket"
+                            Width="100"
+                            Height="32"
+                            Margin="16,0,0,0"
+                            CornerRadius="8"
+                            Click="OnDebugTicketClick"/>
+                    <Button Content="Debug Ticket 2"
+                            Width="120"
+                            Height="32"
+                            Margin="8,0,0,0"
+                            Click="OnDebugTicket2Click"/>
+                    <Button Content="Clear Tickets"
+                            Width="120"
+                            Height="32"
+                            Margin="8,0,0,0"
+                            Click="OnClearTicketsClick"/>
+                    <Button Content="Redraw Ticket 1"
+                            Width="120"
+                            Height="32"
+                            Margin="8,0,0,0"
+                            Click="OnRedrawTickets1Click"/>
+                </StackPanel>
+            </Border>
+
+            <!-- Main Content and Overlay -->
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="1200"/> <!-- Make this smaller as needed -->
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <!-- Ticket slots in row 1 -->
+                <Border Grid.Row="1" Grid.Column="0" BorderThickness="2" CornerRadius="23"
+                        HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
+                        Margin="250"
+                        Padding="10"
+                        Background="#f0f4fa">
+                        <ContentControl x:Name="TicketSlot1"
+                                        HorizontalAlignment="Stretch"
+                                        VerticalAlignment="Stretch"/>
+                </Border>
+                <Border Grid.Row="1" Grid.Column="1" BorderThickness="2" CornerRadius="23"
+                        HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
+                        Margin="250"
+                        Padding="10"
+                        Background="#f0f4fa">
+                    <ContentControl x:Name="TicketSlot2"
+                                    HorizontalAlignment="Stretch"
+                                    VerticalAlignment="Stretch"/>
+                </Border>
+                <!-- OverlayCanvas overlays the entire grid -->
+                <Canvas x:Name="OverlayCanvas"
+                        IsHitTestVisible="False"
+                        Panel.ZIndex="100"
+                        Grid.RowSpan="3"
+                        Grid.ColumnSpan="2"
+						
+                />
+                <!-- Dark overlay for the entire window -->
+                <Border x:Name="DarkOverlay"
+                        Background="#80000000"
+                        Opacity="1"
+                        IsHitTestVisible="False"
+                        Grid.RowSpan="3"
+                        Grid.ColumnSpan="2"
+                        ZIndex="99">
+
+					<TextBlock x:Name="LogTextBlock"
+                               Text="DEBUGTEXTHERE"
+                               VerticalAlignment="Center"
+                               HorizontalAlignment="Center"
+                               FontSize="13"
+                               Foreground="Black"
+                               Margin="24,0,0,0"
+                               TextTrimming="CharacterEllipsis"
+                               />
+				</Border>
+            </Grid>
+        </DockPanel>
+    </Grid>
+</Window>

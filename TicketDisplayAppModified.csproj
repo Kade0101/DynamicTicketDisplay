@@ -1,0 +1,61 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>net8.0</TargetFramework>
+		<Nullable>enable</Nullable>
+		<LangVersion>latest</LangVersion>
+		<OutputType>Exe</OutputType>
+		<StartupObject>TicketDisplayAppModified.Program</StartupObject>
+		<AvaloniaVersion>11.0.0</AvaloniaVersion>
+		<AssemblyName>TicketAppV1.2.9</AssemblyName>
+
+		<RuntimeIdentifiers>win-x64;linux-arm64</RuntimeIdentifiers> 
+
+
+	</PropertyGroup>
+
+	<!-- Debug runs on Windows -->
+	<PropertyGroup Condition="'$(Configuration)'=='Debug'">
+		<UseAppHost>true</UseAppHost>
+		<!-- no RuntimeIdentifier here -->
+	</PropertyGroup>
+
+	<!-- Release produces your Linux ARM64 single-file build -->
+	<PropertyGroup Condition="'$(Configuration)'=='Release'">
+		<RuntimeIdentifier>linux-arm64</RuntimeIdentifier>
+		<SelfContained>true</SelfContained>
+		<PublishSingleFile>true</PublishSingleFile>
+		<StripSymbols>true</StripSymbols>
+		<UseAppHost>true</UseAppHost>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<AvaloniaResource Include="Assets\**" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Avalonia.LinuxFramebuffer" Version="11.3.5" />
+		<PackageReference Include="Avalonia.ReactiveUI" Version="11.3.5" />
+		<PackageReference Include="Avalonia.Svg" Version="11.3.0" />
+		<PackageReference Include="Avalonia.Themes.Fluent" Version="11.3.2" />
+		<PackageReference Include="Avalonia.Fonts.Inter" Version="11.3.2" />
+		<PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="11.3.2" />
+		<PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+			<PackageReference Include="Avalonia" Version="11.3.5" />
+			<PackageReference Include="Avalonia.Desktop" Version="11.3.5" />
+			<PackageReference Include="Avalonia.Skia" Version="11.3.5" />
+			<PackageReference Include="Avalonia.ReactiveUI" Version="11.3.5" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Compile Update="Views\TicketTemplate.axaml.cs">
+	    <DependentUpon>TicketTemplate.axaml</DependentUpon>
+	  </Compile>
+	  <Compile Update="Views\RedrawTicketTemplate.axaml.cs">
+	    <DependentUpon>RedrawTicketTemplate.axaml</DependentUpon>
+	  </Compile>
+	  <Compile Update="Views\MainWindow.axaml.cs">
+  <DependentUpon>MainWindow.axaml</DependentUpon>
+</Compile>
+	</ItemGroup>
+</Project>
