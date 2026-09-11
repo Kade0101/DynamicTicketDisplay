@@ -4,7 +4,7 @@
   "version": "1.0.0",
   "description": "Monorepo for TicketDisplay server and client",
   "scripts": {
-    "test": "echo \"No workspace test suites are configured yet\""
+    "test": "echo \"No workspace test suites are configured yet\" && exit 1"
   },
   "workspaces": [
     "apps/ticketdisplay-server",

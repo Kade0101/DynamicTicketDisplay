@@ -16,3 +16,4 @@ npm test
 ```
 
 No workspace test suites are configured yet, so this currently prints a reminder message.
+The command currently exits with a non-zero status until real tests are added.
