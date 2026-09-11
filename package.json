@@ -4,7 +4,7 @@
   "version": "1.0.0",
   "description": "Monorepo for TicketDisplay server and client",
   "scripts": {
-    "test": "node -e \"const { spawnSync } = require('node:child_process'); const npmCmd = process.platform === 'win32' ? 'npm.cmd' : 'npm'; let failed = false; for (const workspace of ['apps/ticketdisplay-server', 'apps/ticketdisplay-client']) { const result = spawnSync(npmCmd, ['run', 'test', '-w', workspace], { stdio: 'inherit' }); if ((result.status ?? 1) !== 0) failed = true; } if (failed) process.exit(1);\""
+    "test": "npm run test --workspaces --if-present --include-workspace-root=false"
   },
   "workspaces": [
     "apps/ticketdisplay-server",
