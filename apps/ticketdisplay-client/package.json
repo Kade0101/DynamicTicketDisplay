@@ -2,8 +2,5 @@
   "name": "ticketdisplay-client",
   "version": "1.0.0",
   "description": "TicketDisplay client workspace",
-  "scripts": {
-    "test": "echo \"No tests configured for ticketdisplay-client yet\""
-  },
   "license": "MIT"
 }

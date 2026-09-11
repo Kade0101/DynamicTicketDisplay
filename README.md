@@ -7,7 +7,7 @@ This repository is organized as a monorepo with separate workspaces for the Tick
 - `apps/ticketdisplay-server`
 - `apps/ticketdisplay-client`
 
-## Run workspace test placeholders
+## Tests
 
 From the repository root:
 
@@ -15,4 +15,4 @@ From the repository root:
 npm test
 ```
 
-Both workspace `test` scripts are placeholders right now and do not run real test suites yet.
+No workspace test suites are configured yet, so this currently performs no workspace test runs.
