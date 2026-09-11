@@ -19,8 +19,6 @@ The system is designed around two machines:
    - Receives commands over TCP
    - Renders the current ticket visuals on the connected screen
 
-In other words, the external host machine is the source of truth for what should be shown. The display/server side is responsible for presenting that information, not managing the ticket data itself.
-
 ## Current proof-of-concept setup
 
 Right now the project is defaulted to a **single local machine** setup for testing and proof of concept work.
