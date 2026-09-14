@@ -1,6 +1,6 @@
 # DynamicTicketDisplay
 
-This repository contains the current Ticket Display proof of concept. The code is organized under `/home/runner/work/DynamicTicketDisplay/DynamicTicketDisplay/ServerAndClient` and is split into two applications that work together:
+This repository contains the current Ticket Display proof of concept. The code is split into two applications that work together:
 
 - `ServerAndClient/ticketdisplay-server/` - the host/operator application used to create and send ticket updates
 - `ServerAndClient/ticketdisplay-client/` - the display application that listens for updates and renders them on screen
