@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
 		<TargetFramework>net8.0</TargetFramework>
@@ -10,8 +10,9 @@
 		<AssemblyName>TicketAppV1.2.9</AssemblyName>
 
 		<RuntimeIdentifiers>win-x64;linux-arm64</RuntimeIdentifiers> 
-
-
+		
+		<!-- FIXES THE WINDOWS MULTI-PROCESS BUILD CRASH -->
+		<DisableOutOfProcTaskHost>true</DisableOutOfProcTaskHost>
 	</PropertyGroup>
 
 	<!-- Debug runs on Windows -->
@@ -41,10 +42,9 @@
 		<PackageReference Include="Avalonia.Fonts.Inter" Version="11.3.2" />
 		<PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="11.3.2" />
 		<PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-			<PackageReference Include="Avalonia" Version="11.3.5" />
-			<PackageReference Include="Avalonia.Desktop" Version="11.3.5" />
-			<PackageReference Include="Avalonia.Skia" Version="11.3.5" />
-			<PackageReference Include="Avalonia.ReactiveUI" Version="11.3.5" />
+		<PackageReference Include="Avalonia" Version="11.3.5" />
+		<PackageReference Include="Avalonia.Desktop" Version="11.3.5" />
+		<PackageReference Include="Avalonia.Skia" Version="11.3.5" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -55,7 +55,7 @@
 	    <DependentUpon>RedrawTicketTemplate.axaml</DependentUpon>
 	  </Compile>
 	  <Compile Update="Views\MainWindow.axaml.cs">
-  <DependentUpon>MainWindow.axaml</DependentUpon>
-</Compile>
+		<DependentUpon>MainWindow.axaml</DependentUpon>
+	  </Compile>
 	</ItemGroup>
 </Project>
