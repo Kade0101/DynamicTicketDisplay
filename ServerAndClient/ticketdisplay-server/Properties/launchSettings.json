@@ -1,8 +1,8 @@
 {
   "profiles": {
-    "TicketDisplayAppModified": {
+    "Run-Both-Local-Testing": {
       "commandName": "Project",
-      "workingDirectory": "C:\\Users\\kadeg\\source\\repos\\TicketDisplay_Server"
+      "workingDirectory": "."
     }
   }
 }
