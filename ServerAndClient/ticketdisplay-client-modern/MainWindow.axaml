@@ -1,0 +1,369 @@
+<Window
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    x:Class="RaffleDisplayApplication.MainWindow"
+    Title="Raffle Display"
+    Width="1000"
+    Height="600"
+    WindowState="Maximized"
+    SystemDecorations="None"
+    CanResize="False"
+    WindowStartupLocation="CenterScreen"
+    Background="{StaticResource NavyBrush}">
+
+    <Window.Resources>
+        <SolidColorBrush x:Key="NavyBrush" Color="#101B2D" />
+        <SolidColorBrush x:Key="NavyLightBrush" Color="#182544" />
+        <SolidColorBrush x:Key="AccentBrush" Color="#357AB8" />
+        <SolidColorBrush x:Key="WhiteBrush" Color="White" />
+    </Window.Resources>
+
+    <Window.Styles>
+        <!-- Standard action button -->
+        <Style Selector="Button.flat">
+            <Setter Property="Background" Value="{StaticResource AccentBrush}" />
+            <Setter Property="Foreground" Value="{StaticResource WhiteBrush}" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="FontSize" Value="18" />
+            <Setter Property="Padding" Value="14,6" />
+            <Setter Property="Margin" Value="0,0,16,0" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="CornerRadius" Value="10" />
+        </Style>
+
+        <Style Selector="Button.flat:pointerover">
+            <Setter Property="Background" Value="#285A99" />
+        </Style>
+
+        <Style Selector="Button.flat:pressed">
+            <Setter Property="Background" Value="#1D406B" />
+        </Style>
+
+        <Style Selector="Button.flat:disabled">
+            <Setter Property="Background" Value="#444B5A" />
+            <Setter Property="Foreground" Value="#B0B8C1" />
+        </Style>
+
+        <!-- Prize/redraw toggle button -->
+        <Style Selector="ToggleButton.flatToggle">
+            <Setter Property="Background" Value="{StaticResource AccentBrush}" />
+            <Setter Property="Foreground" Value="{StaticResource WhiteBrush}" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="FontSize" Value="18" />
+            <Setter Property="Padding" Value="14,6" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="CornerRadius" Value="10" />
+        </Style>
+
+        <Style Selector="ToggleButton.flatToggle:pointerover">
+            <Setter Property="Background" Value="#285A99" />
+        </Style>
+
+        <Style Selector="ToggleButton.flatToggle:pressed">
+            <Setter Property="Background" Value="#1D406B" />
+        </Style>
+
+        <Style Selector="ToggleButton.flatToggle:checked">
+            <Setter Property="Background" Value="{StaticResource WhiteBrush}" />
+            <Setter Property="Foreground" Value="{StaticResource AccentBrush}" />
+        </Style>
+
+        <!-- Dynamically-created Create Ticket button -->
+        <Style Selector="Button.createTicket">
+            <Setter Property="Background" Value="{StaticResource AccentBrush}" />
+            <Setter Property="Foreground" Value="{StaticResource WhiteBrush}" />
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="FontSize" Value="22" />
+            <Setter Property="Padding" Value="12,4" />
+            <Setter Property="Width" Value="200" />
+            <Setter Property="Height" Value="60" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="CornerRadius" Value="10" />
+        </Style>
+
+        <Style Selector="Button.createTicket:pointerover">
+            <Setter Property="Background" Value="#285A99" />
+        </Style>
+
+        <Style Selector="Button.createTicket:pressed">
+            <Setter Property="Background" Value="#1D406B" />
+        </Style>
+
+        <!-- Small X button used inside ticket slots -->
+        <Style Selector="Button.clearTicket">
+            <Setter Property="Width" Value="30" />
+            <Setter Property="Height" Value="30" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Foreground" Value="White" />
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="FontSize" Value="16" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="CornerRadius" Value="15" />
+        </Style>
+
+        <Style Selector="Button.clearTicket:pointerover">
+            <Setter Property="Background" Value="#66333333" />
+        </Style>
+    </Window.Styles>
+
+    <DockPanel>
+
+        <!-- Top bar -->
+        <Border
+            DockPanel.Dock="Top"
+            Height="60"
+            Background="{StaticResource NavyLightBrush}"
+            BoxShadow="0 2 12 0 #33000000">
+
+            <DockPanel VerticalAlignment="Center">
+                <Button
+                    Classes="flat"
+                    Content="⟵ Back"
+                    Width="120"
+                    Height="40"
+                    Margin="16,0,0,0"
+                    Click="BackButton_Click" />
+
+                <TextBlock
+                    Text="Raffle Display"
+                    VerticalAlignment="Center"
+                    Foreground="White"
+                    FontWeight="Bold"
+                    FontSize="26"
+                    Margin="32,0,0,0" />
+            </DockPanel>
+        </Border>
+
+        <!-- Footer -->
+        <Border
+            DockPanel.Dock="Bottom"
+            Height="72"
+            Background="{StaticResource NavyLightBrush}">
+
+            <Grid ColumnDefinitions="*,Auto">
+                <TextBlock
+                    Grid.Column="0"
+                    Text="Version 1.0.2"
+                    VerticalAlignment="Center"
+                    Margin="32,0,0,0"
+                    Foreground="{StaticResource AccentBrush}"
+                    FontWeight="SemiBold"
+                    FontSize="14" />
+
+                <StackPanel
+                    Grid.Column="1"
+                    Orientation="Horizontal"
+                    VerticalAlignment="Center"
+                    Margin="0,0,32,0">
+
+                    <Button
+                        x:Name="ShowOnTVButton"
+                        Classes="flat"
+                        Content="Show on TV"
+                        Width="180"
+                        Height="48"
+                        Click="ShowOnTV_Click" />
+
+                    <Button
+                        Classes="flat"
+                        Content="Clear Screen"
+                        Width="180"
+                        Height="48"
+                        Click="ClearScreenOnTV_Click" />
+
+					<ToggleButton
+						x:Name="RedrawToggleButton"
+						Classes="flatToggle"
+						Content="Redraw"
+						Width="180"
+						Height="48"
+						Margin="0,0,16,0"
+						IsCheckedChanged="RedrawToggleButton_IsCheckedChanged" />
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- Main area -->
+        <Grid
+            ColumnDefinitions="2*,*"
+            Margin="28">
+
+            <!-- Ticket area -->
+            <Border
+                Grid.Column="0"
+                Background="{StaticResource NavyLightBrush}"
+                CornerRadius="24"
+                BoxShadow="0 3 14 0 #33000000"
+                Padding="40"
+                Margin="0,0,20,0"
+                MinWidth="700"
+                MinHeight="400"
+                VerticalAlignment="Center">
+
+                <StackPanel Spacing="16">
+                    <StackPanel
+                        Orientation="Horizontal"
+                        HorizontalAlignment="Center">
+
+                        <TextBlock
+                            Text="Current Prize: "
+                            FontWeight="Bold"
+                            FontSize="20"
+                            Foreground="{StaticResource AccentBrush}" />
+
+                        <TextBlock
+                            x:Name="CurrentPrizeValue"
+                            FontWeight="Bold"
+                            FontSize="20"
+                            Foreground="{StaticResource WhiteBrush}" />
+                    </StackPanel>
+
+                    <Grid
+                        x:Name="TicketSlotsGrid"
+                        ColumnDefinitions="*,*">
+
+                        <!-- Ticket slot 1 -->
+                        <StackPanel
+                            x:Name="TicketSlot1Panel"
+                            Grid.Column="0"
+                            Margin="24,0"
+                            VerticalAlignment="Center">
+
+                            <TextBlock
+                                Text="Ticket Slot 1"
+                                FontWeight="Bold"
+                                FontSize="18"
+                                Foreground="{StaticResource AccentBrush}"
+                                Margin="0,0,0,12"
+                                HorizontalAlignment="Center" />
+
+                            <Border
+                                Background="{StaticResource NavyBrush}"
+                                CornerRadius="12"
+                                BoxShadow="0 2 10 0 #2A000000"
+                                Padding="32"
+                                MinHeight="220"
+                                Tapped="TicketSlotBorder_Tapped"
+                                Tag="1">
+
+                                <Grid>
+                                    <ContentControl
+                                        x:Name="TicketSlot1"
+                                        HorizontalAlignment="Center"
+                                        VerticalAlignment="Center" />
+
+                                    <Button
+                                        x:Name="ClearTicketSlot1Button"
+                                        Classes="clearTicket"
+                                        Content="✕"
+                                        HorizontalAlignment="Right"
+                                        VerticalAlignment="Top"
+                                        Margin="0,-18,-18,0"
+                                        IsVisible="False"
+                                        Click="ClearTicketSlot1_Click" />
+                                </Grid>
+                            </Border>
+                        </StackPanel>
+
+                        <!-- Ticket slot 2 -->
+                        <StackPanel
+                            x:Name="TicketSlot2Panel"
+                            Grid.Column="1"
+                            Margin="24,0"
+                            VerticalAlignment="Center">
+
+                            <TextBlock
+                                Text="Ticket Slot 2"
+                                FontWeight="Bold"
+                                FontSize="18"
+                                Foreground="{StaticResource AccentBrush}"
+                                Margin="0,0,0,12"
+                                HorizontalAlignment="Center" />
+
+                            <Border
+                                Background="{StaticResource NavyBrush}"
+                                CornerRadius="12"
+                                BoxShadow="0 2 10 0 #2A000000"
+                                Padding="32"
+                                MinHeight="220"
+                                Tapped="TicketSlotBorder_Tapped"
+                                Tag="2">
+
+                                <Grid>
+                                    <ContentControl
+                                        x:Name="TicketSlot2"
+                                        HorizontalAlignment="Center"
+                                        VerticalAlignment="Center" />
+
+                                    <Button
+                                        x:Name="ClearTicketSlot2Button"
+                                        Classes="clearTicket"
+                                        Content="✕"
+                                        HorizontalAlignment="Right"
+                                        VerticalAlignment="Top"
+                                        Margin="0,-18,-18,0"
+                                        IsVisible="False"
+                                        Click="ClearTicketSlot2_Click" />
+                                </Grid>
+                            </Border>
+                        </StackPanel>
+                    </Grid>
+                </StackPanel>
+            </Border>
+
+            <!-- Prize selection -->
+            <Border
+                Grid.Column="1"
+                Background="{StaticResource NavyLightBrush}"
+                CornerRadius="24"
+                BoxShadow="0 3 14 0 #33000000"
+                Padding="40,28"
+                MinWidth="300"
+                VerticalAlignment="Center">
+
+                <StackPanel Spacing="16">
+                    <TextBlock
+                        Text="Select Prize"
+                        FontWeight="Bold"
+                        FontSize="20"
+                        Foreground="{StaticResource AccentBrush}"
+                        HorizontalAlignment="Center"
+                        Margin="0,0,0,4" />
+
+                    <ToggleButton
+                        x:Name="BeerPrizeButton"
+                        Classes="flatToggle"
+                        Content="2x Jugs of Beer"
+                        Width="220"
+                        Height="60"
+                        Click="PrizeButton_Click" />
+
+                    <ToggleButton
+                        x:Name="GiftCardPrizeButton"
+                        Classes="flatToggle"
+                        Content="2x $20 Gift Cards"
+                        Width="220"
+                        Height="60"
+                        Click="PrizeButton_Click" />
+
+                    <ToggleButton
+                        x:Name="SmallMeatPrizeButton"
+                        Classes="flatToggle"
+                        Content="2x Small Meat Trays"
+                        Width="220"
+                        Height="60"
+                        Click="PrizeButton_Click" />
+
+                    <ToggleButton
+                        x:Name="LargeMeatPrizeButton"
+                        Classes="flatToggle"
+                        Content="1x Large Meat Tray"
+                        Width="220"
+                        Height="60"
+                        Click="PrizeButton_Click" />
+                </StackPanel>
+            </Border>
+        </Grid>
+    </DockPanel>
+</Window>

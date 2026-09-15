@@ -1,9 +1,0 @@
-{
-  "name": "ticketdisplay-client",
-  "version": "1.0.0",
-  "description": "TicketDisplay client workspace",
-  "scripts": {
-    "test": "node -e \"console.log('No tests configured for ticketdisplay-client yet')\""
-  },
-  "license": "MIT"
-}

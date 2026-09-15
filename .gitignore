@@ -1,0 +1,6 @@
+**/.vs/
+**/bin/
+**/obj/
+
+ServerAndClient/Releases/Windows/Client/
+ServerAndClient/Releases/Windows/Server/

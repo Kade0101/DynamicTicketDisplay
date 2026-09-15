@@ -49,8 +49,15 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
-        WindowState = WindowState.FullScreen;
-        KeyDown += (s, e) => { if (e.Key == Avalonia.Input.Key.Escape) Close(); };
+
+        Opened += MainWindow_Opened;
+
+        KeyDown += (s, e) =>
+        {
+            if (e.Key == Avalonia.Input.Key.Escape)
+                Close();
+        };
+
         _animations = new MainWindowAnimationService(this);
         StartTcpServer();
     }
@@ -68,6 +75,31 @@ public partial class MainWindow : Window
         _mainView1 = this.FindControl<TicketTemplate>("MainView1");
     }
 
+    private void MainWindow_Opened(object? sender, EventArgs e)
+    {
+        var screens = Screens.All;
+
+        if (screens.Count >= 2)
+        {
+            // Find the monitor that is NOT the primary monitor.
+            var secondScreen = screens.FirstOrDefault(screen => !screen.IsPrimary);
+
+            if (secondScreen != null)
+            {
+                WindowState = WindowState.Normal;
+
+                Position = new PixelPoint(
+                    secondScreen.Bounds.X,
+                    secondScreen.Bounds.Y);
+
+                WindowState = WindowState.FullScreen;
+                return;
+            }
+        }
+
+        // Only one monitor connected: just use it normally.
+        WindowState = WindowState.FullScreen;
+    }
     // INTERNAL ACCESSORS for animation service
     internal Border? DarkOverlayRef => DarkOverlay;
     internal Canvas? OverlayCanvasRef => _overlayCanvas;

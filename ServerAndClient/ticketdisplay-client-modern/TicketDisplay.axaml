@@ -1,0 +1,67 @@
+<UserControl
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    x:Class="RaffleDisplayApplication.TicketDisplay">
+
+    <Border
+        Background="White"
+        CornerRadius="12">
+
+        <Grid ColumnDefinitions="*,48"
+              RowDefinitions="Auto,*">
+
+            <!-- Main ticket content -->
+            <StackPanel
+                Grid.Row="1"
+                Grid.Column="0"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Top"
+                Height="215"
+                Width="160"
+                Margin="32,18,0,0">
+
+                <TextBlock
+                    x:Name="ColorNameText"
+                    Text="GREY"
+                    Margin="0,0,0,15"
+                    Height="32"
+                    HorizontalAlignment="Center"
+                    FontSize="24"
+                    FontWeight="Bold"
+                    Foreground="Gray" />
+
+                <TextBlock
+                    x:Name="LetterText"
+                    Text="A"
+                    Height="68"
+                    Margin="0,0,0,5"
+                    HorizontalAlignment="Center"
+                    FontSize="54"
+                    FontWeight="Black"
+                    FontFamily="Inter"
+                    Foreground="Gray" />
+
+                <TextBlock
+                    x:Name="RaffleText"
+                    Text="123"
+                    Height="75"
+                    HorizontalAlignment="Center"
+                    FontSize="62"
+                    FontWeight="Black"
+                    FontFamily="Inter"
+                    Foreground="Gray" />
+            </StackPanel>
+
+            <!-- Colour strip -->
+            <Border
+                x:Name="ColorStrip"
+                Grid.Row="0"
+                Grid.RowSpan="2"
+                Grid.Column="1"
+                Background="Gray"
+                Width="48"
+                HorizontalAlignment="Stretch"
+                CornerRadius="0,12,12,0" />
+        </Grid>
+    </Border>
+</UserControl>
