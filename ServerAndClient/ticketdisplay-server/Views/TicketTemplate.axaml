@@ -6,61 +6,81 @@
              MinWidth="240"
              MinHeight="260">
     <Grid x:Name="RootGrid">
-        <Grid>
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="3*" />
-                <ColumnDefinition Width="60" />
-            </Grid.ColumnDefinitions>
-            <!-- Main ticket background and content -->
+        <Border CornerRadius="24"
+                ClipToBounds="True"
+                Background="Transparent">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="160" />
+                </Grid.ColumnDefinitions>
+
             <Border Grid.Column="0"
                     Background="White"
-                    CornerRadius="32,0,0,32"
-                    Padding="0"
-                    HorizontalAlignment="Stretch"
-                    VerticalAlignment="Stretch">
-                <StackPanel HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                    CornerRadius="24,0,0,24"
+                    Padding="32,28">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
                     <TextBlock x:Name="ColorNameText"
                                Text="GREY"
-                               Margin="0,30,0,10"
                                HorizontalAlignment="Center"
-                               FontSize="24"
+                               FontSize="26"
                                FontWeight="Bold"
-                               Foreground="Gray" />
-                    <TextBlock x:Name="LetterText"
-                               Text="A"
-                               Margin="0,30,0,-70"
+                               Foreground="#6B7280"
+                               LetterSpacing="1"/>
+
+                    <StackPanel Grid.Row="1"
+                                VerticalAlignment="Center"
+                                HorizontalAlignment="Center"
+                                Spacing="-6">
+                        <TextBlock x:Name="LetterText"
+                                   Text="A"
+                                   HorizontalAlignment="Center"
+                                   FontSize="78"
+                                   FontWeight="ExtraBold"
+                                   FontFamily="Segoe UI Black"
+                                   Foreground="#374151" />
+                        <TextBlock x:Name="RaffleText"
+                                   Text="123"
+                                   HorizontalAlignment="Center"
+                                   FontSize="118"
+                                   FontWeight="ExtraBold"
+                                   FontFamily="Segoe UI Black"
+                                   Foreground="#111827" />
+                    </StackPanel>
+
+                    <TextBlock Grid.Row="2"
+                               Text="CALLED NUMBER"
                                HorizontalAlignment="Center"
-                               FontSize="54"
-                               FontWeight="Bold"
-                               FontFamily="Segoe UI Black"
-                               Foreground="Gray" />
-                    <TextBlock x:Name="RaffleText"
-                               Text="123"
-                               HorizontalAlignment="Center"
-                               FontSize="62"
-                               FontWeight="Bold"
-                               FontFamily="Segoe UI Black"
-                               Margin="0,0,0,0"
-                               Foreground="Gray" />
-                </StackPanel>
+                               FontSize="18"
+                               FontWeight="SemiBold"
+                               Foreground="#9CA3AF"
+                               LetterSpacing="1"/>
+                </Grid>
             </Border>
+
             <Border x:Name="ColorStrip"
                     Grid.Column="1"
                     Background="Gray"
-                    CornerRadius="0,23,23,0"
+                    CornerRadius="0,24,24,0"
                     HorizontalAlignment="Stretch"
-                    VerticalAlignment="Stretch"
-                    />
-            <!-- Overlay border (drawn on top) -->
-            <Border x:Name="OverlayBorder"
-                    Grid.ColumnSpan="2"
-                    BorderBrush="Gray"
-                    BorderThickness="4"
-                    CornerRadius="23"
-                    Background="Transparent"
-                    IsHitTestVisible="False"
-                    ZIndex="1"
-                    Opacity="1"/>
-        </Grid>
+                    VerticalAlignment="Stretch"/>
+
+                <Border x:Name="OverlayBorder"
+                        Grid.ColumnSpan="2"
+                        BorderBrush="#D1D5DB"
+                        BorderThickness="3"
+                        CornerRadius="24"
+                        Background="Transparent"
+                        IsHitTestVisible="False"
+                        ZIndex="1"
+                        Opacity="1"/>
+            </Grid>
+        </Border>
     </Grid>
 </UserControl>

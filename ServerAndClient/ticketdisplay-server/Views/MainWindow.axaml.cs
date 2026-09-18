@@ -43,7 +43,6 @@ public partial class MainWindow : Window
 
     private const bool RequireGpu = true;
 
-    // NEW: animation service
     private MainWindowAnimationService _animations = null!;
 
     public MainWindow()
@@ -57,7 +56,6 @@ public partial class MainWindow : Window
             if (e.Key == Avalonia.Input.Key.Escape)
                 Close();
         };
-
         _animations = new MainWindowAnimationService(this);
         StartTcpServer();
     }
@@ -514,11 +512,8 @@ public partial class MainWindow : Window
 
         var (initialWidth, initialHeight, initialX, initialY) = GetInitialTicketParams(ticket);
 
-        // Show it and play enlarge-in-center
+        // Show it and let the animation service handle appearance/move
         ticket.Opacity = 1;
-        await _animations.EnlargeInCenterAsync(ticket, 250, 0.7);
-
-        // Resolve target
         var slotControl = slot == 1 ? _ticketSlot1 : _ticketSlot2;
         if (slotControl == null)
             throw new InvalidOperationException("Slot control is not initialized.");

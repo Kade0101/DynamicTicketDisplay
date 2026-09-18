@@ -1,90 +1,110 @@
 using System;
-using System.Linq;
+using System.Diagnostics;
 using System.Threading.Tasks;
 using Avalonia;
-using Avalonia.Animation;
 using Avalonia.Animation.Easings;
 using Avalonia.Controls;
 using Avalonia.Media;
-using Avalonia.Styling;
 using Avalonia.Threading;
 
 namespace TicketDisplayAppModified.Views;
 
-// Handles all ticket / overlay animations for MainWindow.
 internal sealed class MainWindowAnimationService
 {
     public readonly MainWindow _window;
 
     public MainWindowAnimationService(MainWindow window) => _window = window;
 
-    // Public entry point used by MainWindow.ShowMainView
     public async Task AnimateTicketToSlotAsync(TicketTemplate ticket, int slot)
     {
-        await FadeOverlayAsync(0, 0.3, 100);
-
-        RemoveTicketFromParent(ticket);
-
-        var overlay = _window.OverlayCanvasRef;
-        if (overlay is null)
-            throw new InvalidOperationException("Overlay canvas not initialized.");
-
-        ticket.Opacity = 0;
-        overlay.Children.Add(ticket);
-
-        // Ensure layout pass
-        await Dispatcher.UIThread.InvokeAsync(() => { }, DispatcherPriority.Render);
-        await Dispatcher.UIThread.InvokeAsync(() => { }, DispatcherPriority.Render);
-
-        var (initialWidth, initialHeight, initialX, initialY) = GetInitialTicketParams(ticket);
-
-        ticket.Opacity = 1;
-        await EnlargeInCenterAsync(ticket, 250, 0.7);
-
-        var slotControl = slot == 1 ? _window.TicketSlot1Ref : _window.TicketSlot2Ref;
-        if (slotControl == null)
-            throw new InvalidOperationException("Slot control is not initialized.");
-        if (slotControl.Parent is not Border targetBorder)
-            throw new InvalidOperationException("Slot control is not inside a Border.");
-
-        await Dispatcher.UIThread.InvokeAsync(() => { }, DispatcherPriority.Render);
-        var (targetWidth, targetHeight, targetX, targetY) = GetTargetSlotParams(slotControl);
-
-        int duration = 600;
-        await AnimateTicketAndSizeAsync(
-            ticket,
-            targetBorder,
-            initialWidth, initialHeight, initialX, initialY,
-            targetWidth, targetHeight, targetX, targetY,
-            duration);
-
-        overlay.Children.Remove(ticket);
-        ticket.RenderTransform = null;
-
-        if (slotControl != null)
+        try
         {
-            ticket.Width = slotControl.Bounds.Width;
-            ticket.Height = slotControl.Bounds.Height;
-            ticket.SetFontScale();
-            ticket.SetColourStripScale((ticket.Width / 240.0) + 1);
-        }
+            await FadeOverlayAsync(0, 0.3, 140);
 
-        if (slot == 1)
-        {
-            _window.SetMainView1(ticket);
-            slotControl.Content = ticket;
-        }
-        else
-        {
-            _window.SetMainView2(ticket);
-            slotControl.Content = ticket;
-        }
+            await Dispatcher.UIThread.InvokeAsync(() => RemoveTicketFromParent(ticket));
 
-        await FadeOverlayAsync(0.3, 0, 120);
-        await Dispatcher.UIThread.InvokeAsync(() => { }, DispatcherPriority.Render);
+            var overlay = _window.OverlayCanvasRef;
+            if (overlay is null)
+                throw new InvalidOperationException("Overlay canvas not initialized.");
+
+            await Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                ticket.Opacity = 0;
+                overlay.Children.Add(ticket);
+            }, DispatcherPriority.Render);
+
+            await Dispatcher.UIThread.InvokeAsync(() => { }, DispatcherPriority.Render);
+            await Dispatcher.UIThread.InvokeAsync(() => { }, DispatcherPriority.Render);
+
+            var (initialWidth, initialHeight, initialX, initialY) = GetInitialTicketParams(ticket);
+
+            await EnlargeInCenterAsync(ticket, 900, 0.4);
+
+            await Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                ticket.RenderTransform = null;
+                ticket.RenderTransformOrigin = new RelativePoint(0, 0, RelativeUnit.Relative);
+                ticket.Width = initialWidth;
+                ticket.Height = initialHeight;
+                Canvas.SetLeft(ticket, initialX);
+                Canvas.SetTop(ticket, initialY);
+                ticket.Opacity = 1;
+            }, DispatcherPriority.Render);
+
+            await Task.Delay(850).ConfigureAwait(false);
+
+            var slotControl = slot == 1 ? _window.TicketSlot1Ref : _window.TicketSlot2Ref;
+            if (slotControl == null)
+                throw new InvalidOperationException("Slot control is not initialized.");
+            if (slotControl.Parent is not Border targetBorder)
+                throw new InvalidOperationException("Slot control is not inside a Border.");
+
+            await Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                targetBorder.InvalidateMeasure();
+                targetBorder.InvalidateArrange();
+                slotControl.InvalidateMeasure();
+                slotControl.InvalidateArrange();
+            }, DispatcherPriority.Render);
+            await Dispatcher.UIThread.InvokeAsync(() => { }, DispatcherPriority.Render);
+            await Dispatcher.UIThread.InvokeAsync(() => { }, DispatcherPriority.Render);
+
+            var (targetWidth, targetHeight, targetX, targetY) = GetTargetSlotParams(slotControl);
+
+            if (targetWidth <= 0 || targetHeight <= 0)
+                throw new InvalidOperationException("Target slot has invalid size for animation.");
+
+            await AnimateTicketAndSizeAsync(ticket, initialWidth, initialHeight, initialX, initialY,
+                targetWidth, targetHeight, targetX, targetY, 700);
+
+            await Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                overlay.Children.Remove(ticket);
+
+                ticket.RenderTransform = null;
+                Canvas.SetLeft(ticket, 0);
+                Canvas.SetTop(ticket, 0);
+
+                ticket.Width = slotControl.Bounds.Width;
+                ticket.Height = slotControl.Bounds.Height;
+                ticket.ApplyScale(ticket.Width / 240.0);
+
+                if (slot == 1)
+                    _window.SetMainView1(ticket);
+                else
+                    _window.SetMainView2(ticket);
+
+                slotControl.Content = ticket;
+            }, DispatcherPriority.Render);
+
+            await Dispatcher.UIThread.InvokeAsync(() => { }, DispatcherPriority.Render);
+        }
+        finally
+        {
+            await FadeOverlayAsync(0.3, 0, 140);
+            await Dispatcher.UIThread.InvokeAsync(() => { }, DispatcherPriority.Render);
+        }
     }
-
-    #region Internal Helpers
 
     private void RemoveTicketFromParent(TicketTemplate ticketTemplate)
     {
@@ -98,60 +118,60 @@ internal sealed class MainWindowAnimationService
             throw new InvalidOperationException("TicketTemplate attached to unsupported parent type.");
     }
 
-    private (double initialWidth, double initialHeight, double initialX, double initialY)
-        GetInitialTicketParams(TicketTemplate ticket)
+    private (double initialWidth, double initialHeight, double initialX, double initialY) GetInitialTicketParams(TicketTemplate ticket)
     {
         double initialWidth = _window.Bounds.Width * 0.3;
         double initialHeight = _window.Bounds.Height * 0.5;
-        double initialX = (_window.Bounds.Width - initialWidth) / 2;
-        double initialY = (_window.Bounds.Height - initialHeight) / 2;
 
-        ticket.Width = initialWidth;
-        ticket.Height = initialHeight;
-        Canvas.SetLeft(ticket, initialX);
-        Canvas.SetTop(ticket, initialY);
+        var overlay = _window.OverlayCanvasRef;
+        double overlayWidth = overlay?.Bounds.Width > 0 ? overlay.Bounds.Width : _window.Bounds.Width;
+        double overlayHeight = overlay?.Bounds.Height > 0 ? overlay.Bounds.Height : _window.Bounds.Height;
 
-        double fontScale = initialWidth / 240.0;
-        ticket.SetColourStripScale(fontScale + 1);
+        double initialX = (overlayWidth - initialWidth) / 2;
+        double initialY = ((overlayHeight - initialHeight) / 2) - (overlayHeight * 0.05);
+
+        Dispatcher.UIThread.Invoke(() =>
+        {
+            ticket.Width = initialWidth;
+            ticket.Height = initialHeight;
+            Canvas.SetLeft(ticket, initialX);
+            Canvas.SetTop(ticket, initialY);
+            ticket.ApplyScale(initialWidth / 240.0);
+        });
 
         return (initialWidth, initialHeight, initialX, initialY);
     }
 
-    private (double targetWidth, double targetHeight, double targetX, double targetY)
-        GetTargetSlotParams(ContentControl slotControl)
+    private (double targetWidth, double targetHeight, double targetX, double targetY) GetTargetSlotParams(ContentControl slotControl)
     {
         if (slotControl.Parent is not Border targetBorder)
             throw new InvalidOperationException("Slot control is not inside a Border.");
 
-        var borderPos = targetBorder.TranslatePoint(new Point(0, 0), _window);
+        var overlay = _window.OverlayCanvasRef;
+        if (overlay is null)
+            throw new InvalidOperationException("Overlay canvas not initialized.");
+
+        Point? borderPos = null;
+        double targetWidth = 0;
+        double targetHeight = 0;
+        double borderWidth = 0;
+        double borderHeight = 0;
+
+        Dispatcher.UIThread.Invoke(() =>
+        {
+            borderPos = targetBorder.TranslatePoint(new Point(0, 0), overlay);
+            targetWidth = slotControl.Bounds.Width;
+            targetHeight = slotControl.Bounds.Height;
+            borderWidth = targetBorder.Bounds.Width;
+            borderHeight = targetBorder.Bounds.Height;
+        });
+
         if (borderPos == null)
             throw new InvalidOperationException("Could not determine border position.");
 
-        double targetWidth = slotControl.Bounds.Width;
-        double targetHeight = slotControl.Bounds.Height;
-        double targetX = borderPos.Value.X + (targetBorder.Bounds.Width - targetWidth) / 2;
-        double targetY = borderPos.Value.Y + ((targetBorder.Bounds.Height - targetHeight) / 2);
+        double targetX = borderPos.Value.X + (borderWidth - targetWidth) / 2;
+        double targetY = borderPos.Value.Y + (borderHeight - targetHeight) / 2;
         return (targetWidth, targetHeight, targetX, targetY);
-    }
-
-    private static void EnsureTransition(Animatable target, AvaloniaProperty<double> prop, int durationMs, Easing? easing = null)
-    {
-        target.Transitions ??= new Transitions();
-        var existing = target.Transitions.OfType<DoubleTransition>().FirstOrDefault(x => x.Property == prop);
-        if (existing == null)
-        {
-            target.Transitions.Add(new DoubleTransition
-            {
-                Property = prop,
-                Duration = TimeSpan.FromMilliseconds(durationMs),
-                Easing = easing ?? new SineEaseInOut()
-            });
-        }
-        else
-        {
-            existing.Duration = TimeSpan.FromMilliseconds(durationMs);
-            existing.Easing = easing ?? new SineEaseInOut();
-        }
     }
 
     public async Task FadeOverlayAsync(double from, double to, int durationMs)
@@ -159,96 +179,113 @@ internal sealed class MainWindowAnimationService
         var dark = _window.DarkOverlayRef;
         if (dark is null) return;
 
+        var easing = new SineEaseInOut();
+        var stopwatch = Stopwatch.StartNew();
+
         await Dispatcher.UIThread.InvokeAsync(() =>
         {
+            dark.IsVisible = true;
             dark.Opacity = from;
-            EnsureTransition(dark, Visual.OpacityProperty, durationMs, new SineEaseInOut());
-            dark.Opacity = to;
         }, DispatcherPriority.Render);
 
-        await Task.Delay(durationMs + 16).ConfigureAwait(false);
+        while (true)
+        {
+            double progress = Math.Clamp(stopwatch.Elapsed.TotalMilliseconds / durationMs, 0, 1);
+            double eased = easing.Ease(progress);
+            double opacity = from + ((to - from) * eased);
+
+            await Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                dark.Opacity = opacity;
+            }, DispatcherPriority.Render);
+
+            if (progress >= 1)
+                break;
+
+            await Task.Delay(8).ConfigureAwait(false);
+        }
+
+        await Dispatcher.UIThread.InvokeAsync(() =>
+        {
+            dark.Opacity = to;
+            if (to <= 0)
+            {
+                dark.IsVisible = false;
+                dark.Opacity = 0;
+            }
+        }, DispatcherPriority.Render);
     }
 
     public async Task EnlargeInCenterAsync(Control target, int durationMs, double startScale)
     {
-        var group = target.RenderTransform as TransformGroup ?? new TransformGroup();
-        var scale = group.Children.OfType<ScaleTransform>().FirstOrDefault();
-        if (scale == null)
-        {
-            scale = new ScaleTransform(1, 1);
-            group.Children.Add(scale);
-        }
-        target.RenderTransform = group;
-        target.RenderTransformOrigin = new RelativePoint(0.5, 0.5, RelativeUnit.Relative);
-
         await Dispatcher.UIThread.InvokeAsync(() =>
         {
-            scale.ScaleX = startScale;
-            scale.ScaleY = startScale;
-
-            EnsureTransition(scale, ScaleTransform.ScaleXProperty, durationMs, new SineEaseInOut());
-            EnsureTransition(scale, ScaleTransform.ScaleYProperty, durationMs, new SineEaseInOut());
-
-            scale.ScaleX = 1d;
-            scale.ScaleY = 1d;
+            var group = new TransformGroup();
+            var scale = new ScaleTransform(startScale, startScale);
+            group.Children.Add(scale);
+            target.RenderTransform = group;
+            target.RenderTransformOrigin = new RelativePoint(0.5, 0.5, RelativeUnit.Relative);
+            target.Opacity = 0;
         }, DispatcherPriority.Render);
 
-        await Task.Delay(durationMs + 16).ConfigureAwait(false);
+        var easing = new SineEaseInOut();
+        var stopwatch = Stopwatch.StartNew();
+
+        while (true)
+        {
+            double progress = Math.Clamp(stopwatch.Elapsed.TotalMilliseconds / durationMs, 0, 1);
+            double eased = easing.Ease(progress);
+            double currentScale = startScale + ((1d - startScale) * eased);
+
+            await Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                if (target.RenderTransform is TransformGroup group && group.Children.Count > 0 && group.Children[0] is ScaleTransform scale)
+                {
+                    target.Opacity = eased;
+                    scale.ScaleX = currentScale;
+                    scale.ScaleY = currentScale;
+                }
+            }, DispatcherPriority.Render);
+
+            if (progress >= 1)
+                break;
+
+            await Task.Delay(8).ConfigureAwait(false);
+        }
     }
 
-    private async Task AnimateTransformToSlotAsync(
-        Control target,
+    private async Task AnimateTicketAndSizeAsync(
+        TicketTemplate ticket,
         double initialWidth, double initialHeight, double initialX, double initialY,
         double targetWidth, double targetHeight, double targetX, double targetY,
         int durationMs)
     {
-        var group = target.RenderTransform as TransformGroup ?? new TransformGroup();
-        var scale = group.Children.OfType<ScaleTransform>().FirstOrDefault() ?? new ScaleTransform(1, 1);
-        var translate = group.Children.OfType<TranslateTransform>().FirstOrDefault() ?? new TranslateTransform(0, 0);
-        if (!group.Children.Contains(scale)) group.Children.Insert(0, scale);
-        if (!group.Children.Contains(translate)) group.Children.Add(translate);
-        target.RenderTransform = group;
-        target.RenderTransformOrigin = new RelativePoint(0, 0, RelativeUnit.Relative);
+        var easing = new SineEaseInOut();
+        var stopwatch = Stopwatch.StartNew();
 
-        target.Width = initialWidth;
-        target.Height = initialHeight;
-        Canvas.SetLeft(target, initialX);
-        Canvas.SetTop(target, initialY);
-
-        double sx = targetWidth / initialWidth;
-        double sy = targetHeight / initialHeight;
-        double dx = targetX - initialX;
-        double dy = targetY - initialY;
-
-        await Dispatcher.UIThread.InvokeAsync(() =>
+        while (true)
         {
-            scale.ScaleX = 1d;
-            scale.ScaleY = 1d;
-            translate.X = 0d;
-            translate.Y = 0d;
+            double progress = Math.Clamp(stopwatch.Elapsed.TotalMilliseconds / durationMs, 0, 1);
+            double eased = easing.Ease(progress);
 
-            EnsureTransition(scale, ScaleTransform.ScaleXProperty, durationMs, new SineEaseInOut());
-            EnsureTransition(scale, ScaleTransform.ScaleYProperty, durationMs, new SineEaseInOut());
-            EnsureTransition(translate, TranslateTransform.XProperty, durationMs, new SineEaseInOut());
-            EnsureTransition(translate, TranslateTransform.YProperty, durationMs, new SineEaseInOut());
+            double currentWidth = initialWidth + ((targetWidth - initialWidth) * eased);
+            double currentHeight = initialHeight + ((targetHeight - initialHeight) * eased);
+            double currentX = initialX + ((targetX - initialX) * eased);
+            double currentY = initialY + ((targetY - initialY) * eased);
 
-            scale.ScaleX = sx;
-            scale.ScaleY = sy;
-            translate.X = dx;
-            translate.Y = dy;
-        }, DispatcherPriority.Render);
+            await Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                ticket.Width = currentWidth;
+                ticket.Height = currentHeight;
+                Canvas.SetLeft(ticket, currentX);
+                Canvas.SetTop(ticket, currentY);
+                ticket.ApplyScale(currentWidth / 240.0);
+            }, DispatcherPriority.Render);
 
-        await Task.Delay(durationMs + 16).ConfigureAwait(false);
+            if (progress >= 1)
+                break;
+
+            await Task.Delay(8).ConfigureAwait(false);
+        }
     }
-
-    private Task AnimateTicketAndSizeAsync(
-        TicketTemplate ticket,
-        Border _,
-        double initialWidth, double initialHeight, double initialX, double initialY,
-        double targetWidth, double targetHeight, double targetX, double targetY,
-        int duration) =>
-        AnimateTransformToSlotAsync(ticket, initialWidth, initialHeight, initialX, initialY,
-                                    targetWidth, targetHeight, targetX, targetY, duration);
-
-    #endregion
 }

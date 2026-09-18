@@ -2,126 +2,170 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         x:Class="TicketDisplayAppModified.Views.MainWindow"
         Title="Raffle Display"
-        Width="800" Height="450">
+        Width="1280" Height="720"
+        Background="#F3F4F6">
     <Grid>
-        <!-- Patterned background image 
-        <Image Source="C:\Users\kadeg\Source\Repos\TicketDisplay_Server\Assets\arrowdark.png"
-               Stretch="UniformToFill"
-               Opacity="1"
-               IsHitTestVisible="False"/>-->
+        <Grid.RowDefinitions>
+            <RowDefinitions>Auto,*,Auto</RowDefinitions>
+        </Grid.RowDefinitions>
 
-        <!-- White bar at the top, not touching top or sides -->
-        <Border Background="#f0f4fa"
-                CornerRadius="16"
-                HorizontalAlignment="Center"
-                VerticalAlignment="Top"
-                Margin="40,48,40,0"
-                Height="130"
-                Width="600"
-                ZIndex="10">
-            <TextBlock x:Name="PrizeText"
-                       Text="2x Meat Trays"
-                       VerticalAlignment="Center"
-                       HorizontalAlignment="Center"
-                       FontSize="80"
-                       Foreground="Black"
-                       FontWeight="Bold"/>
-        </Border>
+        <Border Grid.RowSpan="3" Background="#F3F4F6"/>
 
-        <DockPanel>
-            <!-- Bottom Bar -->
-            <Border DockPanel.Dock="Bottom" Background="#ECECEC" Height="48">
-                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Stretch" Margin="8,0">
-                    <TextBlock Text="Version 1.2.8"
-                               VerticalAlignment="Center"
-                               HorizontalAlignment="Left"
-                               FontSize="13"
-                               Foreground="Black"/>
-
-                    <Ellipse x:Name="SshStatusIndicator" Width="16" Height="16" Fill="Red" Margin="8,0,0,0"/>
-                    <Button Content="Debug Ticket"
-                            Width="100"
-                            Height="32"
-                            Margin="16,0,0,0"
-                            CornerRadius="8"
-                            Click="OnDebugTicketClick"/>
-                    <Button Content="Debug Ticket 2"
-                            Width="120"
-                            Height="32"
-                            Margin="8,0,0,0"
-                            Click="OnDebugTicket2Click"/>
-                    <Button Content="Clear Tickets"
-                            Width="120"
-                            Height="32"
-                            Margin="8,0,0,0"
-                            Click="OnClearTicketsClick"/>
-                    <Button Content="Redraw Ticket 1"
-                            Width="120"
-                            Height="32"
-                            Margin="8,0,0,0"
-                            Click="OnRedrawTickets1Click"/>
-                </StackPanel>
-            </Border>
-
-            <!-- Main Content and Overlay -->
+        <Border Grid.Row="0"
+                Margin="70,28,40,18"
+                Padding="0,0,0,0"
+                Background="Transparent"
+                BorderBrush="#D1D5DB"
+                BorderThickness="0,0,0,1">
             <Grid>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="1200"/> <!-- Make this smaller as needed -->
-                    <RowDefinition Height="*"/>
-                </Grid.RowDefinitions>
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="*" />
+                    <ColumnDefinitions>*,Auto</ColumnDefinitions>
                 </Grid.ColumnDefinitions>
 
-                <!-- Ticket slots in row 1 -->
-                <Border Grid.Row="1" Grid.Column="0" BorderThickness="2" CornerRadius="23"
-                        HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
-                        Margin="250"
-                        Padding="10"
-                        Background="#f0f4fa">
-                        <ContentControl x:Name="TicketSlot1"
-                                        HorizontalAlignment="Stretch"
-                                        VerticalAlignment="Stretch"/>
-                </Border>
-                <Border Grid.Row="1" Grid.Column="1" BorderThickness="2" CornerRadius="23"
-                        HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
-                        Margin="250"
-                        Padding="10"
-                        Background="#f0f4fa">
-                    <ContentControl x:Name="TicketSlot2"
-                                    HorizontalAlignment="Stretch"
-                                    VerticalAlignment="Stretch"/>
-                </Border>
-                <!-- OverlayCanvas overlays the entire grid -->
-                <Canvas x:Name="OverlayCanvas"
-                        IsHitTestVisible="False"
-                        Panel.ZIndex="100"
-                        Grid.RowSpan="3"
-                        Grid.ColumnSpan="2"
-						
-                />
-                <!-- Dark overlay for the entire window -->
-                <Border x:Name="DarkOverlay"
-                        Background="#80000000"
-                        Opacity="1"
-                        IsHitTestVisible="False"
-                        Grid.RowSpan="3"
-                        Grid.ColumnSpan="2"
-                        ZIndex="99">
-
-					<TextBlock x:Name="LogTextBlock"
-                               Text="DEBUGTEXTHERE"
-                               VerticalAlignment="Center"
+                <StackPanel Spacing="8">
+                    <TextBlock Text="CURRENT PRIZE"
                                HorizontalAlignment="Center"
-                               FontSize="13"
-                               Foreground="Black"
-                               Margin="24,0,0,0"
-                               TextTrimming="CharacterEllipsis"
-                               />
-				</Border>
+                               FontSize="18"
+                               FontWeight="Bold"
+                               Foreground="#6B7280"
+                               LetterSpacing="1"/>
+                    <TextBlock x:Name="PrizeText"
+                               HorizontalAlignment="Center"
+                               Text="2x Meat Trays"
+                               FontSize="60"
+                               FontWeight="ExtraBold"
+                               Foreground="#111827"
+                               TextWrapping="Wrap"
+                               MaxWidth="900"/>
+                </StackPanel>
+
+                <Border Grid.Column="1"
+                        Padding="14,8"
+                        CornerRadius="10"
+                        Background="#FFFFFF"
+                        BorderBrush="#D1D5DB"
+                        BorderThickness="1"
+                        VerticalAlignment="Center">
+                    <TextBlock Text="LIVE DISPLAY"
+                               FontSize="15"
+                               FontWeight="SemiBold"
+                               Foreground="#4B5563"
+                               LetterSpacing="0.5"/>
+                </Border>
             </Grid>
-        </DockPanel>
+        </Border>
+
+        <Grid Grid.Row="1" Margin="100,8,100,24">
+            <Grid.RowDefinitions>
+                <RowDefinitions>Auto,*</RowDefinitions>
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinitions>*,100,*</ColumnDefinitions>
+            </Grid.ColumnDefinitions>
+
+            <TextBlock Grid.Row="0"
+                       Grid.ColumnSpan="3"
+                       Text="LATEST TICKETS"
+                       Margin="4,0,0,14"
+                       FontSize="20"
+                       FontWeight="Bold"
+                       Foreground="#6B7280"
+                       LetterSpacing="1"/>
+
+            <Border Grid.Row="1" Grid.Column="0"
+                    CornerRadius="20"
+                    Padding="12"
+                    Background="#6B7280"
+                    BorderBrush="#E5E7EB"
+                    BorderThickness="2">
+                <ContentControl x:Name="TicketSlot1"
+                                HorizontalAlignment="Stretch"
+                                VerticalAlignment="Stretch"/>
+            </Border>
+
+            <Border Grid.Row="1" Grid.Column="2"
+                    CornerRadius="20"
+                    Padding="12"
+                    Background="#6B7280"
+                    BorderBrush="#E5E7EB"
+                    BorderThickness="2">
+                <ContentControl x:Name="TicketSlot2"
+                                HorizontalAlignment="Stretch"
+                                VerticalAlignment="Stretch"/>
+            </Border>
+
+            <Canvas x:Name="OverlayCanvas"
+                    IsHitTestVisible="False"
+                    Panel.ZIndex="100"
+                    Grid.RowSpan="2"
+                    Grid.ColumnSpan="3"/>
+        </Grid>
+
+        <Border Grid.RowSpan="3"
+                x:Name="DarkOverlay"
+                Background="#99000000"
+                Opacity="0"
+                IsVisible="False"
+                IsHitTestVisible="False"
+                ZIndex="99">
+            <Border HorizontalAlignment="Center"
+                    VerticalAlignment="Bottom"
+                    Margin="24"
+                    Padding="20,14"
+                    CornerRadius="14"
+                    Background="#F8FAFC"
+                    IsVisible="True">
+                <TextBlock x:Name="LogTextBlock"
+                           Text="DEBUGTEXTHERE"
+                           FontSize="18"
+                           FontWeight="SemiBold"
+                           Foreground="#111827"
+                           TextAlignment="Center"
+                           TextWrapping="Wrap"
+                           MaxWidth="1100"
+                           IsVisible="True"/>
+            </Border>
+        </Border>
+
+        <Border Grid.Row="2"
+                Background="#E5E7EB"
+                Padding="10,8">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <TextBlock Text="Version 1.2.8"
+                           VerticalAlignment="Center"
+                           FontSize="12"
+                           Foreground="#6B7280"/>
+
+                <Button Grid.Column="2" Content="Debug Ticket"
+                        MinWidth="110" Height="32"
+                        Margin="8,0,0,0"
+                        CornerRadius="8"
+                        Click="OnDebugTicketClick"/>
+                <Button Grid.Column="3" Content="Debug Ticket 2"
+                        MinWidth="120" Height="32"
+                        Margin="8,0,0,0"
+                        CornerRadius="8"
+                        Click="OnDebugTicket2Click"/>
+                <Button Grid.Column="4" Content="Clear Tickets"
+                        MinWidth="120" Height="32"
+                        Margin="8,0,0,0"
+                        CornerRadius="8"
+                        Click="OnClearTicketsClick"/>
+                <Button Grid.Column="5" Content="Redraw Ticket 1"
+                        MinWidth="130" Height="32"
+                        Margin="8,0,0,0"
+                        CornerRadius="8"
+                        Click="OnRedrawTickets1Click"/>
+            </Grid>
+        </Border>
     </Grid>
 </Window>
