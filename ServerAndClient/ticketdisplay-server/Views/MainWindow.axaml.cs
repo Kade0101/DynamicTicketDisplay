@@ -9,15 +9,14 @@ using Avalonia.Platform;
 using Avalonia.Skia;
 using Avalonia.Styling;
 using Avalonia.Threading;
+using Avalonia;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
-using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -25,29 +24,71 @@ namespace TicketDisplayAppModified.Views;
 
 public partial class MainWindow : Window
 {
+    internal sealed record LiveSlotSnapshot(Point Center, double Width, double Height);
+    private sealed class PersistedState
+    {
+        public string Instructions { get; set; } = string.Empty;
+    }
+
     private const int Port = 5000;
-    private TicketTemplate? _mainView1;
-    private TicketTemplate? _mainView2;
+    private static readonly string PersistedStateFilePath = System.IO.Path.Combine(
+        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+        "DynamicTicketDisplay",
+        "server-state.json");
+    private readonly Dictionary<int, TicketTemplate?> _mainViews = new();
+    private readonly Dictionary<int, TicketInfo?> _currentTickets = new();
+    private readonly List<TicketInfo> previouslyDrawnTickets = new();
     private TextBlock? _logTextBlock;
+    private Border? _appBackground;
+    private Border? _headerPanel;
+    private Border? _displayBadge;
+    private Border? _ticketFrame1;
+    private Border? _ticketFrame2;
+    private Border? _infoPanel;
+    private Border? _footerPanel;
+    private Border? _liveTicketHost1;
+    private Border? _liveTicketHost2;
+    private Border? _liveTicketHost3;
+    private Border? _liveTicketHost4;
+    private TextBlock? _prizeLabel;
+    private TextBlock? _displayBadgeText;
+    private TextBlock? _ticketSectionLabel;
+    private TextBlock? _infoPanelTitle;
+    private TextBlock? _infoPanelLine1;
+    private TextBlock? _infoPanelLine2;
+    private TextBlock? _infoPanelLine3;
+    private Control? _emptySlot1Placeholder;
+    private Control? _emptySlot2Placeholder;
+    private StackPanel? _liveDrawSlotsPanel;
+    private WrapPanel? _previouslyDrawnTicketsPanel;
+    private ScrollViewer? _previouslyDrawnTicketsScrollViewer;
+    private TextBlock? _emptySlot1Title;
+    private TextBlock? _emptySlot1Body;
+    private TextBlock? _emptySlot2Title;
+    private TextBlock? _emptySlot2Body;
+    private bool _isDebugVisible;
 
     private ContentControl? _ticketSlot1;
     private ContentControl? _ticketSlot2;
+    private ContentControl? _ticketSlot3;
+    private ContentControl? _ticketSlot4;
     private Canvas? _overlayCanvas;
     private TextBlock? _prizeText;
-
-    private readonly List<double> _frameDtsMs = new(180);
-
-    private readonly string _logFilePath = System.IO.Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-        "TicketApp", "ticketapp.log");
-
-    private const bool RequireGpu = true;
 
     private MainWindowAnimationService _animations = null!;
 
     public MainWindow()
     {
         InitializeComponent();
+        for (int slot = 1; slot <= 4; slot++)
+        {
+            _mainViews[slot] = null;
+            _currentTickets[slot] = null;
+        }
+
+        ApplyLiveDisplayLayout();
+        LoadPersistedState();
+        UpdateSlotPlaceholders();
 
         Opened += MainWindow_Opened;
 
@@ -55,6 +96,9 @@ public partial class MainWindow : Window
         {
             if (e.Key == Avalonia.Input.Key.Escape)
                 Close();
+
+            if (e.Key == Avalonia.Input.Key.D)
+                ToggleDebugVisibility();
         };
         _animations = new MainWindowAnimationService(this);
         StartTcpServer();
@@ -63,14 +107,50 @@ public partial class MainWindow : Window
     private void InitializeComponent()
     {
         AvaloniaXamlLoader.Load(this);
+        _appBackground = this.FindControl<Border>("AppBackground");
+        _headerPanel = this.FindControl<Border>("HeaderPanel");
+        _displayBadge = this.FindControl<Border>("DisplayBadge");
+        _ticketFrame1 = this.FindControl<Border>("TicketFrame1");
+        _ticketFrame2 = this.FindControl<Border>("TicketFrame2");
+        _infoPanel = this.FindControl<Border>("InfoPanel");
+        _footerPanel = this.FindControl<Border>("FooterPanel");
+        _liveTicketHost1 = this.FindControl<Border>("LiveTicketHost1");
+        _liveTicketHost2 = this.FindControl<Border>("LiveTicketHost2");
+        _liveTicketHost3 = this.FindControl<Border>("LiveTicketHost3");
+        _liveTicketHost4 = this.FindControl<Border>("LiveTicketHost4");
         _logTextBlock = this.FindControl<TextBlock>("LogTextBlock");
+        _prizeLabel = this.FindControl<TextBlock>("PrizeLabel");
+        _displayBadgeText = this.FindControl<TextBlock>("DisplayBadgeText");
+        _ticketSectionLabel = this.FindControl<TextBlock>("TicketSectionLabel");
+        _infoPanelTitle = this.FindControl<TextBlock>("InfoPanelTitle");
+        _infoPanelLine1 = this.FindControl<TextBlock>("InfoPanelLine1");
+        _infoPanelLine2 = this.FindControl<TextBlock>("InfoPanelLine2");
+        _infoPanelLine3 = this.FindControl<TextBlock>("InfoPanelLine3");
+        _liveDrawSlotsPanel = this.FindControl<StackPanel>("LiveDrawSlotsPanel");
+        _previouslyDrawnTicketsPanel = this.FindControl<WrapPanel>("PreviouslyDrawnTicketsPanel");
+        _previouslyDrawnTicketsScrollViewer = this.FindControl<ScrollViewer>("PreviouslyDrawnTicketsScrollViewer");
         _ticketSlot1 = this.FindControl<ContentControl>("TicketSlot1");
         _ticketSlot2 = this.FindControl<ContentControl>("TicketSlot2");
+        _ticketSlot3 = this.FindControl<ContentControl>("TicketSlot3");
+        _ticketSlot4 = this.FindControl<ContentControl>("TicketSlot4");
+        _emptySlot1Placeholder = this.FindControl<Control>("EmptySlot1Placeholder");
+        _emptySlot2Placeholder = this.FindControl<Control>("EmptySlot2Placeholder");
+        _emptySlot1Title = this.FindControl<TextBlock>("EmptySlot1Title");
+        _emptySlot1Body = this.FindControl<TextBlock>("EmptySlot1Body");
+        _emptySlot2Title = this.FindControl<TextBlock>("EmptySlot2Title");
+        _emptySlot2Body = this.FindControl<TextBlock>("EmptySlot2Body");
         _overlayCanvas = this.FindControl<Canvas>("OverlayCanvas");
         DarkOverlay = this.FindControl<Border>("DarkOverlay");
         _prizeText = this.FindControl<TextBlock>("PrizeText");
-        _mainView2 = this.FindControl<TicketTemplate>("MainView2");
-        _mainView1 = this.FindControl<TicketTemplate>("MainView1");
+
+        if (_ticketFrame1 != null)
+        {
+            _ticketFrame1.PropertyChanged += (_, e) =>
+            {
+                if (e.Property == BoundsProperty)
+                    UpdateLiveDrawSlotLayout();
+            };
+        }
     }
 
     private void MainWindow_Opened(object? sender, EventArgs e)
@@ -101,10 +181,13 @@ public partial class MainWindow : Window
     // INTERNAL ACCESSORS for animation service
     internal Border? DarkOverlayRef => DarkOverlay;
     internal Canvas? OverlayCanvasRef => _overlayCanvas;
-    internal ContentControl? TicketSlot1Ref => _ticketSlot1;
-    internal ContentControl? TicketSlot2Ref => _ticketSlot2;
-    internal void SetMainView1(TicketTemplate t) => _mainView1 = t;
-    internal void SetMainView2(TicketTemplate t) => _mainView2 = t;
+    internal ContentControl? GetTicketSlotRef(int slot) => GetLiveTicketSlot(slot);
+    internal void SetMainView(int slot, TicketTemplate? ticketTemplate) => _mainViews[slot] = ticketTemplate;
+    internal void RefreshLayoutChrome() => Dispatcher.UIThread.Post(() =>
+    {
+        UpdateSlotPlaceholders();
+        UpdateLiveDrawSlotLayout();
+    });
 
     public async Task AppendLogAsync(string message)
     {
@@ -182,7 +265,7 @@ public partial class MainWindow : Window
                     // Ensure SlotNumber is stored as a string internally, even if sent as a number
                     ticket.SlotNumber = json["SlotNumber"]?.ToString();
 
-                    int slotIndex = ticket.SlotNumber == "1" ? 1 : 2;
+                    int slotIndex = ParseSlotNumber(ticket.SlotNumber);
                     await ShowMainView(slotIndex, ticket);
                     await AppendLogAsync($"Direct ticket info received for Slot {ticket.SlotNumber}: {ticket.Letter} {ticket.Number} {ticket.Color}");
                     return;
@@ -205,9 +288,27 @@ public partial class MainWindow : Window
         }
         else if (context == "Clear")
         {
-            HideMainView(1);
-            HideMainView(2);
+            for (int slot = 1; slot <= 4; slot++)
+                HideMainView(slot);
+
             await AppendLogAsync("All tickets cleared.");
+            return;
+        }
+        else if (context == "Confirm")
+        {
+            SaveCurrentTicketsToPreviouslyDrawnList();
+            RefreshPreviouslyDrawnTicketsDisplay();
+            await AppendLogAsync($"Saved {previouslyDrawnTickets.Count} confirmed tickets to history.");
+            return;
+        }
+        else if (context == "Instructions")
+        {
+            var instructions = json["Item1"]?.ToString() ?? string.Empty;
+            if (_infoPanelLine1 != null)
+                _infoPanelLine1.Text = instructions;
+
+            SavePersistedState();
+            await AppendLogAsync("Instructions updated and saved.");
             return;
         }
         else if (context == "TicketInfo")
@@ -231,7 +332,7 @@ public partial class MainWindow : Window
                 // Sync structural difference: force SlotNumber to string representation
                 ticket.SlotNumber = ticketToken["SlotNumber"]?.ToString();
 
-                int slotIndex = ticket.SlotNumber == "1" ? 1 : 2;
+                int slotIndex = ParseSlotNumber(ticket.SlotNumber);
                 await ShowMainView(slotIndex, ticket);
                 await AppendLogAsync($"Ticket info received for Slot {ticket.SlotNumber}: {ticket.Letter} {ticket.Number} {ticket.Color}");
             }
@@ -248,35 +349,39 @@ public partial class MainWindow : Window
 
     private async Task ShowMainView(int slot, TicketInfo ticket)
     {
-        if (slot == 1 && !(_ticketSlot1.Content is TicketTemplate))
-        {
-            if (_ticketSlot1.Content is RedrawTicketTemplate) _ticketSlot1.Content = null;
-            _mainView1 = new TicketTemplate(this);
-            _mainView1?.UpdateTicket(ticket);
-            await _animations.AnimateTicketToSlotAsync(_mainView1, 1);
-            await Task.Delay(5000);
-        }
-        else if (slot == 2 && !(_ticketSlot2.Content is TicketTemplate))
-        {
-            if (_ticketSlot2.Content is RedrawTicketTemplate) _ticketSlot2.Content = null;
-            _mainView2 = new TicketTemplate(this);
-            _mainView2?.UpdateTicket(ticket);
-            await _animations.AnimateTicketToSlotAsync(_mainView2, 2);
-            await Task.Delay(5000);
-        }
+        var slotControl = GetLiveTicketSlot(slot);
+        if (slotControl == null || slotControl.Content is TicketTemplate)
+            return;
+
+        if (slotControl.Content is RedrawTicketTemplate)
+            slotControl.Content = null;
+
+        var previousLayout = CaptureActiveTicketLayout();
+        var mainView = new TicketTemplate(this);
+        mainView.UpdateTicket(ticket);
+        _mainViews[slot] = mainView;
+        _currentTickets[slot] = CloneTicketInfo(ticket);
+        UpdateLiveDrawSlotLayout();
+        await _animations.AnimateLiveSlotReflowAsync(previousLayout);
+        await _animations.AnimateTicketToSlotAsync(mainView, slot);
+        await Task.Delay(5000);
     }
 
     private void HideMainView(int slot)
     {
-        if (slot == 1 && _mainView1 != null)
+        var slotControl = GetLiveTicketSlot(slot);
+        if (slotControl == null)
+            return;
+
+        if (_mainViews.TryGetValue(slot, out var mainView) && mainView != null)
         {
-            _ticketSlot1.Content = null;
-            _mainView1 = null;
-        }
-        else if (slot == 2 && _mainView2 != null)
-        {
-            _ticketSlot2.Content = null;
-            _mainView2 = null;
+            var previousLayout = CaptureActiveTicketLayout();
+            slotControl.Content = null;
+            _mainViews[slot] = null;
+            _currentTickets[slot] = null;
+            UpdateSlotPlaceholders();
+            UpdateLiveDrawSlotLayout();
+            _ = _animations.AnimateLiveSlotReflowAsync(previousLayout);
         }
     }
 
@@ -312,12 +417,369 @@ public partial class MainWindow : Window
         });
     }
 
+    private void UpdateSlotPlaceholders()
+    {
+        if (_emptySlot1Placeholder != null)
+            _emptySlot1Placeholder.IsVisible = GetActiveLiveTicketCount() == 0;
 
+        if (_emptySlot2Placeholder != null)
+            _emptySlot2Placeholder.IsVisible = previouslyDrawnTickets.Count == 0;
+
+        if (_previouslyDrawnTicketsScrollViewer != null)
+            _previouslyDrawnTicketsScrollViewer.IsVisible = previouslyDrawnTickets.Count > 0;
+
+        UpdateLiveDrawSlotLayout();
+    }
+
+    private void SaveCurrentTicketsToPreviouslyDrawnList()
+    {
+        foreach (var ticket in _currentTickets
+                     .OrderBy(entry => entry.Key)
+                     .Select(entry => entry.Value)
+                     .Where(ticket => ticket != null))
+        {
+            previouslyDrawnTickets.Add(CloneTicketInfo(ticket!));
+        }
+    }
+
+    private void RefreshPreviouslyDrawnTicketsDisplay()
+    {
+        if (_previouslyDrawnTicketsPanel == null)
+        {
+            UpdateSlotPlaceholders();
+            return;
+        }
+
+        _previouslyDrawnTicketsPanel.Children.Clear();
+
+        foreach (var ticket in previouslyDrawnTickets
+                     .AsEnumerable()
+                     .Reverse()
+                     .Take(8))
+        {
+            var row = new Border
+            {
+                Width = 250,
+                CornerRadius = new CornerRadius(16),
+                Background = Brush("#F8FAFC"),
+                BorderBrush = Brush("#DBEAFE"),
+                BorderThickness = new Thickness(2),
+                Padding = new Thickness(14, 10)
+            };
+
+            var layout = new Grid();
+            layout.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Auto));
+            layout.ColumnDefinitions.Add(new ColumnDefinition(12, GridUnitType.Pixel));
+            layout.ColumnDefinitions.Add(new ColumnDefinition(1, GridUnitType.Star));
+
+            var colorBand = new Border
+            {
+                Width = 12,
+                CornerRadius = new CornerRadius(6),
+                Background = Brush(MapTicketColor(ticket.Color))
+            };
+
+            var details = new StackPanel
+            {
+                Spacing = 2,
+                VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center
+            };
+
+            details.Children.Add(new TextBlock
+            {
+                Text = $"{ticket.Letter?.ToUpperInvariant()} {ticket.Number}",
+                FontSize = 22,
+                FontWeight = FontWeight.Bold,
+                Foreground = Brush("#0F172A")
+            });
+
+            details.Children.Add(new TextBlock
+            {
+                Text = (ticket.Color ?? string.Empty).ToUpperInvariant(),
+                FontSize = 14,
+                FontWeight = FontWeight.SemiBold,
+                Foreground = Brush(MapTicketColor(ticket.Color))
+            });
+
+            Grid.SetColumn(colorBand, 0);
+            Grid.SetColumn(details, 2);
+            layout.Children.Add(colorBand);
+            layout.Children.Add(details);
+            row.Child = layout;
+            _previouslyDrawnTicketsPanel.Children.Add(row);
+        }
+
+        UpdateSlotPlaceholders();
+    }
+
+    private static TicketInfo CloneTicketInfo(TicketInfo ticket) => new()
+    {
+        Letter = ticket.Letter,
+        Number = ticket.Number,
+        Color = ticket.Color,
+        SlotNumber = ticket.SlotNumber
+    };
+
+    private static string MapTicketColor(string? colorName)
+    {
+        return (colorName ?? string.Empty).Trim().ToLowerInvariant() switch
+        {
+            "grey" => "#9CA3AF",
+            "blue" => "#4682B4",
+            "orange" => "#F97316",
+            "yellow" => "#FACC15",
+            "tangerine" => "#FF4500",
+            "pink" => "#EC4899",
+            "green" => "#2E8B57",
+            _ => "#D1D5DB"
+        };
+    }
+
+    private void LoadPersistedState()
+    {
+        try
+        {
+            if (!File.Exists(PersistedStateFilePath))
+                return;
+
+            var json = File.ReadAllText(PersistedStateFilePath);
+            var state = JsonConvert.DeserializeObject<PersistedState>(json);
+            if (_infoPanelLine1 != null)
+                _infoPanelLine1.Text = state?.Instructions ?? string.Empty;
+        }
+        catch
+        {
+        }
+    }
+
+    private void SavePersistedState()
+    {
+        try
+        {
+            var directory = System.IO.Path.GetDirectoryName(PersistedStateFilePath);
+            if (!string.IsNullOrWhiteSpace(directory))
+                Directory.CreateDirectory(directory);
+
+            var state = new PersistedState
+            {
+                Instructions = _infoPanelLine1?.Text ?? string.Empty
+            };
+
+            File.WriteAllText(PersistedStateFilePath, JsonConvert.SerializeObject(state, Formatting.Indented));
+        }
+        catch
+        {
+        }
+    }
+
+    private int ParseSlotNumber(string? slotNumber)
+    {
+        return int.TryParse(slotNumber, out var parsed)
+            ? Math.Clamp(parsed, 1, 4)
+            : 1;
+    }
+
+    private ContentControl? GetLiveTicketSlot(int slot) => slot switch
+    {
+        1 => _ticketSlot1,
+        2 => _ticketSlot2,
+        3 => _ticketSlot3,
+        4 => _ticketSlot4,
+        _ => null
+    };
+
+    private Border? GetLiveTicketHost(int slot) => slot switch
+    {
+        1 => _liveTicketHost1,
+        2 => _liveTicketHost2,
+        3 => _liveTicketHost3,
+        4 => _liveTicketHost4,
+        _ => null
+    };
+
+    private int GetActiveLiveTicketCount()
+    {
+        int count = 0;
+        for (int slot = 1; slot <= 4; slot++)
+        {
+            if ((_mainViews.TryGetValue(slot, out var mainView) && mainView != null) ||
+                GetLiveTicketSlot(slot)?.Content is TicketTemplate)
+                count++;
+        }
+
+        return count;
+    }
+
+    private Dictionary<int, LiveSlotSnapshot> CaptureActiveTicketLayout()
+    {
+        var snapshots = new Dictionary<int, LiveSlotSnapshot>();
+        var relativeTo = (Visual?)_overlayCanvas ?? this;
+
+        for (int slot = 1; slot <= 4; slot++)
+        {
+            var slotControl = GetLiveTicketSlot(slot);
+            if (slotControl?.Content is not TicketTemplate ticket)
+                continue;
+
+            var center = slotControl.TranslatePoint(
+                new Point(slotControl.Bounds.Width / 2, slotControl.Bounds.Height / 2),
+                relativeTo);
+
+            if (center.HasValue)
+            {
+                double width = ticket.Bounds.Width > 0 ? ticket.Bounds.Width : slotControl.Bounds.Width;
+                double height = ticket.Bounds.Height > 0 ? ticket.Bounds.Height : slotControl.Bounds.Height;
+                snapshots[slot] = new LiveSlotSnapshot(center.Value, width, height);
+            }
+        }
+
+        return snapshots;
+    }
+
+    private void UpdateLiveDrawSlotLayout()
+    {
+        if (_ticketFrame1 == null || _liveDrawSlotsPanel == null)
+            return;
+
+        var activeHosts = new List<Border>();
+        for (int slot = 1; slot <= 4; slot++)
+        {
+            var host = GetLiveTicketHost(slot);
+            var slotControl = GetLiveTicketSlot(slot);
+            if (host == null || slotControl == null)
+                continue;
+
+            bool isActive = (_mainViews.TryGetValue(slot, out var mainView) && mainView != null) ||
+                            slotControl.Content is TicketTemplate;
+            host.IsVisible = isActive;
+            if (isActive)
+                activeHosts.Add(host);
+        }
+
+        _liveDrawSlotsPanel.IsVisible = activeHosts.Count > 0;
+        if (activeHosts.Count == 0)
+            return;
+
+        const double baseWidth = 240d;
+        const double baseHeight = 260d;
+        double spacing = _liveDrawSlotsPanel.Spacing;
+        double availableWidth = Math.Max(0, _ticketFrame1.Bounds.Width - _ticketFrame1.Padding.Left - _ticketFrame1.Padding.Right - 24);
+        double availableHeight = Math.Max(0, _ticketFrame1.Bounds.Height - _ticketFrame1.Padding.Top - _ticketFrame1.Padding.Bottom - 24);
+        double widthFromRow = (availableWidth - (spacing * (activeHosts.Count - 1))) / activeHosts.Count;
+        double widthFromHeight = availableHeight * (baseWidth / baseHeight);
+        double targetWidth = Math.Max(180, Math.Min(widthFromRow, widthFromHeight));
+        double targetHeight = targetWidth * (baseHeight / baseWidth);
+
+        foreach (var host in activeHosts)
+        {
+            host.Width = targetWidth;
+            host.Height = targetHeight;
+        }
+    }
+
+    private static SolidColorBrush Brush(string color) => new(Color.Parse(color));
+
+    private void ApplyLiveDisplayLayout()
+    {
+        Background = Brush("#F8FAFC");
+
+        if (_appBackground != null)
+            _appBackground.Background = Brush("#EFF6FF");
+
+        if (_headerPanel != null)
+        {
+            _headerPanel.Margin = new Thickness(70, 24, 70, 14);
+            _headerPanel.Padding = new Thickness(24, 18);
+            _headerPanel.CornerRadius = new CornerRadius(22);
+            _headerPanel.Background = Brush("#FFFFFF");
+            _headerPanel.BorderBrush = Brush("#BFDBFE");
+            _headerPanel.BorderThickness = new Thickness(2);
+        }
+
+        if (_footerPanel != null)
+            _footerPanel.Background = Brush("#DBEAFE");
+
+        if (_ticketFrame1 != null)
+            ApplyFrameStyle(_ticketFrame1, "#E5E7EB", "#BFDBFE", 24, 16, 3);
+
+        if (_ticketFrame2 != null)
+            ApplyFrameStyle(_ticketFrame2, "#FFFFFF", "#BFDBFE", 24, 16, 3);
+
+        if (_infoPanel != null)
+        {
+            _infoPanel.IsVisible = true;
+            _infoPanel.Background = Brush("#FFFFFF");
+            _infoPanel.BorderBrush = Brush("#BFDBFE");
+            _infoPanel.BorderThickness = new Thickness(3);
+            _infoPanel.CornerRadius = new CornerRadius(24);
+            _infoPanel.Padding = new Thickness(24, 20);
+        }
+
+        if (_prizeLabel != null) _prizeLabel.Foreground = Brush("#2563EB");
+        if (_prizeText != null) _prizeText.Foreground = Brush("#0F172A");
+        if (_ticketSectionLabel != null)
+        {
+            _ticketSectionLabel.Text = "LIVE TICKET BOARD";
+            _ticketSectionLabel.Foreground = Brush("#2563EB");
+        }
+        if (_displayBadge != null)
+        {
+            _displayBadge.Background = Brush("#E0F2FE");
+            _displayBadge.BorderBrush = Brush("#7DD3FC");
+        }
+        if (_displayBadgeText != null)
+        {
+            _displayBadgeText.Text = "LIVE DISPLAY";
+            _displayBadgeText.Foreground = Brush("#0369A1");
+        }
+
+        SetPlaceholderCopy("LIVE DRAW SLOT", "Current ticket fills this board", "PREVIOUS TICKET", "Most recent ticket stays here");
+        SetPlaceholderTextColors("#334155", "#64748B");
+
+        if (_infoPanelTitle != null) _infoPanelTitle.Text = "HOW TO CLAIM";
+        if (_infoPanelLine1 != null) _infoPanelLine1.Text = "Present your ticket at the counter";
+        if (_infoPanelLine2 != null) _infoPanelLine2.Text = "Keep the colour and number visible";
+        if (_infoPanelLine3 != null) _infoPanelLine3.Text = "Must be present when called";
+
+        UpdateSlotPlaceholders();
+    }
+
+    private static void ApplyFrameStyle(Border frame, string background, string borderBrush, double radius, double padding, double borderThickness)
+    {
+        frame.Background = Brush(background);
+        frame.BorderBrush = Brush(borderBrush);
+        frame.CornerRadius = new CornerRadius(radius);
+        frame.Padding = new Thickness(padding);
+        frame.BorderThickness = new Thickness(borderThickness);
+    }
+
+    private void SetPlaceholderTextColors(string titleColor, string bodyColor)
+    {
+        if (_emptySlot1Title != null) _emptySlot1Title.Foreground = Brush(titleColor);
+        if (_emptySlot1Body != null) _emptySlot1Body.Foreground = Brush(bodyColor);
+        if (_emptySlot2Title != null) _emptySlot2Title.Foreground = Brush(titleColor);
+        if (_emptySlot2Body != null) _emptySlot2Body.Foreground = Brush(bodyColor);
+    }
+
+    private void SetPlaceholderCopy(string slot1Title, string slot1Body, string slot2Title, string slot2Body)
+    {
+        if (_emptySlot1Title != null) _emptySlot1Title.Text = slot1Title;
+        if (_emptySlot1Body != null) _emptySlot1Body.Text = slot1Body;
+        if (_emptySlot2Title != null) _emptySlot2Title.Text = slot2Title;
+        if (_emptySlot2Body != null) _emptySlot2Body.Text = slot2Body;
+    }
+
+    private void ToggleDebugVisibility()
+    {
+        _isDebugVisible = !_isDebugVisible;
+
+        if (_footerPanel != null)
+            _footerPanel.IsVisible = _isDebugVisible;
+    }
 
     public async void OnDebugTicketClick(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
         var ticket = new TicketInfo { Letter = "A", Number = "13", Color = "#FF0000", SlotNumber = "1" };
-        _mainView1?.UpdateTicket(ticket);
         ShowMainView(1, ticket);
         await AppendLogAsync("Debug ticket created in Slot 1.");
     }
@@ -325,7 +787,6 @@ public partial class MainWindow : Window
     public async void OnDebugTicket2Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
         var ticket = new TicketInfo { Letter = "B", Number = "42", Color = "#00FF00", SlotNumber = "2" };
-        _mainView2?.UpdateTicket(ticket);
         ShowMainView(2, ticket);
         await AppendLogAsync("Debug ticket created in Slot 2.");
     }
@@ -334,6 +795,8 @@ public partial class MainWindow : Window
     {
         HideMainView(1);
         HideMainView(2);
+        HideMainView(3);
+        HideMainView(4);
         await AppendLogAsync("Cleared all tickets.");
     }
 
@@ -344,218 +807,25 @@ public partial class MainWindow : Window
 
     public async void RedrawTicket(int slot = 1)
     {
-        if (_mainView1 == null) return;
+        if (!_mainViews.TryGetValue(slot, out var mainView) || mainView == null) return;
+
+        var slotControl = GetLiveTicketSlot(slot);
+        if (slotControl == null) return;
 
         if (slot == 1)
         {
-            _ticketSlot1.Content = null;
-            _ticketSlot1.Content = _mainView1.RedrawTicket();
+            slotControl.Content = null;
+            slotControl.Content = mainView.RedrawTicket();
+            UpdateSlotPlaceholders();
             await AppendLogAsync("Redrawing ticket in Slot 1.");
         }
         else if (slot == 2)
         {
-            _ticketSlot2.Content = null;
-            _ticketSlot2.Content = _mainView2.RedrawTicket();
+            slotControl.Content = null;
+            slotControl.Content = mainView.RedrawTicket();
+            UpdateSlotPlaceholders();
             await AppendLogAsync("Redrawing ticket in Slot 2.");
         }
     }
 
-    private void RemoveTicketFromParent(TicketTemplate ticketTemplate)
-    {
-        if (ticketTemplate.Parent is Panel oldPanel)
-            oldPanel.Children.Remove(ticketTemplate);
-        else if (ticketTemplate.Parent is ContentControl oldContent)
-            oldContent.Content = null;
-        else if (ticketTemplate.Parent is Decorator oldDecorator)
-            oldDecorator.Child = null;
-        else if (ticketTemplate.Parent != null)
-            throw new InvalidOperationException("TicketTemplate is already attached to an unsupported parent type.");
-    }
-
-    private (double initialWidth, double initialHeight, double initialX, double initialY) GetInitialTicketParams(TicketTemplate ticket)
-    {
-        double initialWidth = this.Bounds.Width * 0.3;
-        double initialHeight = this.Bounds.Height * 0.5;
-        double initialX = (this.Bounds.Width - initialWidth) / 2;
-        double initialY = (this.Bounds.Height - initialHeight) / 2;
-
-        ticket.Width = initialWidth;
-        ticket.Height = initialHeight;
-        Canvas.SetLeft(ticket, initialX);
-        Canvas.SetTop(ticket, initialY);
-
-        // One-time sizing for internals
-        double fontScale = initialWidth / 240.0;
-        ticket.SetColourStripScale(fontScale + 1);
-
-        return (initialWidth, initialHeight, initialX, initialY);
-    }
-
-    private (double targetWidth, double targetHeight, double targetX, double targetY) GetTargetSlotParams(ContentControl slotControl)
-    {
-        if (slotControl.Parent is not Border targetBorder)
-            throw new InvalidOperationException("Slot control is not inside a Border.");
-
-        var borderPos = targetBorder.TranslatePoint(new Point(0, 0), this);
-        if (borderPos == null)
-            throw new InvalidOperationException("Could not determine border position.");
-
-        double targetWidth = slotControl.Bounds.Width;
-        double targetHeight = slotControl.Bounds.Height;
-        double targetX = borderPos.Value.X + (targetBorder.Bounds.Width - targetWidth) / 2;
-        double targetY = borderPos.Value.Y + ((targetBorder.Bounds.Height - targetHeight) / 2);
-        return (targetWidth, targetHeight, targetX, targetY);
-    }
-
-    private static void EnsureTransition(Animatable target, AvaloniaProperty<double> prop, int durationMs, Easing? easing = null)
-    {
-        target.Transitions ??= new Transitions();
-        var t = target.Transitions.OfType<DoubleTransition>().FirstOrDefault(x => x.Property == prop);
-        if (t == null)
-        {
-            target.Transitions.Add(new DoubleTransition
-            {
-                Property = prop,
-                Duration = TimeSpan.FromMilliseconds(durationMs),
-                Easing = easing ?? new SineEaseInOut()
-            });
-        }
-        else
-        {
-            t.Duration = TimeSpan.FromMilliseconds(durationMs);
-            t.Easing = easing ?? new SineEaseInOut();
-        }
-    }
-
-    private async Task AnimateTransformToSlotAsync(Control target,
-        double initialWidth, double initialHeight, double initialX, double initialY,
-        double targetWidth, double targetHeight, double targetX, double targetY,
-        int durationMs)
-    {
-        // Ensure transform group with scale + translate
-        var group = target.RenderTransform as TransformGroup ?? new TransformGroup();
-        var scale = group.Children.OfType<ScaleTransform>().FirstOrDefault() ?? new ScaleTransform(1, 1);
-        var translate = group.Children.OfType<TranslateTransform>().FirstOrDefault() ?? new TranslateTransform(0, 0);
-        if (!group.Children.Contains(scale)) group.Children.Insert(0, scale);
-        if (!group.Children.Contains(translate)) group.Children.Add(translate);
-        target.RenderTransform = group;
-        target.RenderTransformOrigin = new RelativePoint(0, 0, RelativeUnit.Relative);
-
-        // Set initial layout once
-        target.Width = initialWidth;
-        target.Height = initialHeight;
-        Canvas.SetLeft(target, initialX);
-        Canvas.SetTop(target, initialY);
-
-        double sx = targetWidth / initialWidth;
-        double sy = targetHeight / initialHeight;
-        double dx = targetX - initialX;
-        double dy = targetY - initialY;
-
-        await Dispatcher.UIThread.InvokeAsync(() =>
-        {
-            // Start state
-            scale.ScaleX = 1d;
-            scale.ScaleY = 1d;
-            translate.X = 0d;
-            translate.Y = 0d;
-
-            // Transitions
-            EnsureTransition(scale, ScaleTransform.ScaleXProperty, durationMs, new SineEaseInOut());
-            EnsureTransition(scale, ScaleTransform.ScaleYProperty, durationMs, new SineEaseInOut());
-            EnsureTransition(translate, TranslateTransform.XProperty, durationMs, new SineEaseInOut());
-            EnsureTransition(translate, TranslateTransform.YProperty, durationMs, new SineEaseInOut());
-
-            // final
-            scale.ScaleX = sx;
-            scale.ScaleY = sy;
-            translate.X = dx;
-            translate.Y = dy;
-        }, DispatcherPriority.Render);
-
-        await Task.Delay(durationMs + 16).ConfigureAwait(false);
-    }
-
-    // Old method kept for signature compatibility but now calls the transition-based path
-    private async Task AnimateTicketAndSizeAsync(
-        TicketTemplate ticket,
-        Border _,
-        double initialWidth, double initialHeight, double initialX, double initialY,
-        double targetWidth, double targetHeight, double targetX, double targetY,
-        int duration, int steps)
-    {
-        await AnimateTransformToSlotAsync(ticket, initialWidth, initialHeight, initialX, initialY, targetWidth, targetHeight, targetX, targetY, duration);
-    }
-
-    public async Task AnimateTicketToSlot(TicketTemplate ticket, int slot)
-    {
-        // darkens background
-        await _animations.FadeOverlayAsync(0, 0.3, 100);
-
-        // Detach from any existing parent
-        RemoveTicketFromParent(ticket);
-
-        // Add ticket to overlay in the center (changes the parent)
-        ticket.Opacity = 0;
-        if (_overlayCanvas != null)
-        {
-            _overlayCanvas.Children.Add(ticket);
-        }
-        else
-        {
-            throw new InvalidOperationException("_overlayCanvas is not initialized.");
-        }
-
-        // Layout ready
-        await Dispatcher.UIThread.InvokeAsync(() => { }, DispatcherPriority.Render); // These two lines lets the UI thread finish its cycle before it measures positions
-        await Dispatcher.UIThread.InvokeAsync(() => { }, DispatcherPriority.Render); // Second pass to ensure layout is stable
-
-        var (initialWidth, initialHeight, initialX, initialY) = GetInitialTicketParams(ticket);
-
-        // Show it and let the animation service handle appearance/move
-        ticket.Opacity = 1;
-        var slotControl = slot == 1 ? _ticketSlot1 : _ticketSlot2;
-        if (slotControl == null)
-            throw new InvalidOperationException("Slot control is not initialized.");
-        if (slotControl.Parent is not Border targetBorder)
-            throw new InvalidOperationException("Slot control is not inside a Border.");
-
-        await Dispatcher.UIThread.InvokeAsync(() => { }, DispatcherPriority.Render);
-        var (targetWidth, targetHeight, targetX, targetY) = GetTargetSlotParams(slotControl);
-
-        // Travel to slot via transform animation
-        int duration = 600;
-        await AnimateTicketAndSizeAsync(ticket, targetBorder, initialWidth, initialHeight, initialX, initialY, targetWidth, targetHeight, targetX, targetY, duration, 0);
-
-        // Remove from overlay and set as slot content
-        _overlayCanvas.Children.Remove(ticket);
-
-        // Reset transform before attaching to the slot
-        ticket.RenderTransform = null;
-
-        // Match the slot size and update visuals once
-        if (slotControl != null)
-        {
-            ticket.Width = slotControl.Bounds.Width;
-            ticket.Height = slotControl.Bounds.Height;
-            ticket.SetFontScale();
-            ticket.SetColourStripScale((ticket.Width / 240.0) + 1);
-        }
-
-        if (slot == 1)
-        {
-            _mainView1 = ticket;
-            _ticketSlot1.Content = ticket;
-        }
-        else
-        {
-            _mainView2 = ticket;
-            _ticketSlot2.Content = ticket;
-        }
-
-        // Fade out overlay
-        await _animations.FadeOverlayAsync(0.3, 0, 120);
-
-        await Dispatcher.UIThread.InvokeAsync(() => { }, DispatcherPriority.Render);
-    }
 }

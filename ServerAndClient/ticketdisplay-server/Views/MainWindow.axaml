@@ -9,9 +9,12 @@
             <RowDefinitions>Auto,*,Auto</RowDefinitions>
         </Grid.RowDefinitions>
 
-        <Border Grid.RowSpan="3" Background="#F3F4F6"/>
+        <Border x:Name="AppBackground"
+                Grid.RowSpan="3"
+                Background="#F3F4F6"/>
 
-        <Border Grid.Row="0"
+        <Border x:Name="HeaderPanel"
+                Grid.Row="0"
                 Margin="70,28,40,18"
                 Padding="0,0,0,0"
                 Background="Transparent"
@@ -23,7 +26,8 @@
                 </Grid.ColumnDefinitions>
 
                 <StackPanel Spacing="8">
-                    <TextBlock Text="CURRENT PRIZE"
+                    <TextBlock x:Name="PrizeLabel"
+                               Text="CURRENT PRIZE"
                                HorizontalAlignment="Center"
                                FontSize="18"
                                FontWeight="Bold"
@@ -39,59 +43,200 @@
                                MaxWidth="900"/>
                 </StackPanel>
 
-                <Border Grid.Column="1"
-                        Padding="14,8"
-                        CornerRadius="10"
-                        Background="#FFFFFF"
-                        BorderBrush="#D1D5DB"
-                        BorderThickness="1"
-                        VerticalAlignment="Center">
-                    <TextBlock Text="LIVE DISPLAY"
-                               FontSize="15"
-                               FontWeight="SemiBold"
-                               Foreground="#4B5563"
-                               LetterSpacing="0.5"/>
-                </Border>
+                <StackPanel Grid.Column="1"
+                            Spacing="10"
+                            HorizontalAlignment="Right"
+                            VerticalAlignment="Center">
+                    <Border x:Name="DisplayBadge"
+                            Padding="14,8"
+                            CornerRadius="10"
+                            Background="#E0F2FE"
+                            BorderBrush="#7DD3FC"
+                            BorderThickness="1"
+                            HorizontalAlignment="Right">
+                        <TextBlock x:Name="DisplayBadgeText"
+                                   Text="LIVE DISPLAY"
+                                   FontSize="15"
+                                   FontWeight="SemiBold"
+                                   Foreground="#0369A1"
+                                   LetterSpacing="0.5"/>
+                    </Border>
+
+                    <StackPanel x:Name="LiveDisplayInfoPanel"
+                                Spacing="4"
+                                HorizontalAlignment="Right">
+                        <TextBlock Text="Keep ticket ready"
+                                   FontSize="13"
+                                   FontWeight="SemiBold"
+                                   Foreground="#64748B"
+                                   HorizontalAlignment="Right"/>
+                        <TextBlock Text="Claim at the counter when called"
+                                   FontSize="13"
+                                   Foreground="#64748B"
+                                   HorizontalAlignment="Right"/>
+                    </StackPanel>
+                </StackPanel>
             </Grid>
         </Border>
 
-        <Grid Grid.Row="1" Margin="100,8,100,24">
+        <Grid x:Name="TicketAreaGrid"
+              Grid.Row="1"
+              Margin="82,14,82,28">
             <Grid.RowDefinitions>
-                <RowDefinitions>Auto,*</RowDefinitions>
+                <RowDefinitions>Auto,1.9*,24,*</RowDefinitions>
             </Grid.RowDefinitions>
             <Grid.ColumnDefinitions>
-                <ColumnDefinitions>*,100,*</ColumnDefinitions>
+                <ColumnDefinitions>1.15*,28,0.85*</ColumnDefinitions>
             </Grid.ColumnDefinitions>
 
-            <TextBlock Grid.Row="0"
+            <TextBlock x:Name="TicketSectionLabel"
+                       Grid.Row="0"
                        Grid.ColumnSpan="3"
-                       Text="LATEST TICKETS"
+                       Text="LIVE TICKET BOARD"
                        Margin="4,0,0,14"
                        FontSize="20"
                        FontWeight="Bold"
-                       Foreground="#6B7280"
+                       Foreground="#2563EB"
                        LetterSpacing="1"/>
 
-            <Border Grid.Row="1" Grid.Column="0"
-                    CornerRadius="20"
-                    Padding="12"
-                    Background="#6B7280"
-                    BorderBrush="#E5E7EB"
-                    BorderThickness="2">
-                <ContentControl x:Name="TicketSlot1"
-                                HorizontalAlignment="Stretch"
-                                VerticalAlignment="Stretch"/>
+            <Border x:Name="TicketFrame1"
+                    Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3"
+                    CornerRadius="24"
+                    Padding="16"
+                    Background="#FFFFFF"
+                    BorderBrush="#BFDBFE"
+                    BorderThickness="3"
+                    ClipToBounds="False">
+                <Grid>
+                    <StackPanel x:Name="EmptySlot1Placeholder"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center"
+                                Spacing="8"
+                                IsHitTestVisible="False">
+                        <TextBlock x:Name="EmptySlot1Title"
+                                   Text="LIVE DRAW SLOT"
+                                   HorizontalAlignment="Center"
+                                   FontSize="26"
+                                   FontWeight="Bold"
+                                   Foreground="#334155"
+                                   LetterSpacing="1"/>
+                        <TextBlock x:Name="EmptySlot1Body"
+                                   Text="Current ticket fills this board"
+                                   HorizontalAlignment="Center"
+                                   FontSize="16"
+                                   Foreground="#64748B"/>
+                    </StackPanel>
+
+                    <StackPanel x:Name="LiveDrawSlotsPanel"
+                                Orientation="Horizontal"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center"
+                                 Spacing="24"
+                                 ClipToBounds="False">
+                        <Border x:Name="LiveTicketHost1"
+                                IsVisible="False"
+                                 Background="Transparent"
+                                 ClipToBounds="False">
+                            <ContentControl x:Name="TicketSlot1"
+                                            ClipToBounds="False"
+                                            HorizontalAlignment="Stretch"
+                                            VerticalAlignment="Stretch"/>
+                        </Border>
+                        <Border x:Name="LiveTicketHost2"
+                                IsVisible="False"
+                                 Background="Transparent"
+                                 ClipToBounds="False">
+                            <ContentControl x:Name="TicketSlot2"
+                                            ClipToBounds="False"
+                                            HorizontalAlignment="Stretch"
+                                            VerticalAlignment="Stretch"/>
+                        </Border>
+                        <Border x:Name="LiveTicketHost3"
+                                IsVisible="False"
+                                 Background="Transparent"
+                                 ClipToBounds="False">
+                            <ContentControl x:Name="TicketSlot3"
+                                            ClipToBounds="False"
+                                            HorizontalAlignment="Stretch"
+                                            VerticalAlignment="Stretch"/>
+                        </Border>
+                        <Border x:Name="LiveTicketHost4"
+                                IsVisible="False"
+                                 Background="Transparent"
+                                 ClipToBounds="False">
+                            <ContentControl x:Name="TicketSlot4"
+                                            ClipToBounds="False"
+                                            HorizontalAlignment="Stretch"
+                                            VerticalAlignment="Stretch"/>
+                        </Border>
+                    </StackPanel>
+                </Grid>
             </Border>
 
-            <Border Grid.Row="1" Grid.Column="2"
-                    CornerRadius="20"
-                    Padding="12"
-                    Background="#6B7280"
-                    BorderBrush="#E5E7EB"
-                    BorderThickness="2">
-                <ContentControl x:Name="TicketSlot2"
-                                HorizontalAlignment="Stretch"
-                                VerticalAlignment="Stretch"/>
+            <Border x:Name="TicketFrame2"
+                    Grid.Row="3" Grid.Column="0"
+                    CornerRadius="24"
+                    Padding="16"
+                    Background="#FFFFFF"
+                    BorderBrush="#BFDBFE"
+                    BorderThickness="3">
+                <Grid>
+                    <StackPanel x:Name="EmptySlot2Placeholder"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center"
+                                Spacing="8"
+                                IsHitTestVisible="False">
+                        <TextBlock x:Name="EmptySlot2Title"
+                                   Text="PREVIOUS TICKET"
+                                   HorizontalAlignment="Center"
+                                   FontSize="26"
+                                   FontWeight="Bold"
+                                   Foreground="#334155"
+                                   LetterSpacing="1"/>
+                        <TextBlock x:Name="EmptySlot2Body"
+                                   Text="Confirmed ticket history can appear here"
+                                   HorizontalAlignment="Center"
+                                   FontSize="16"
+                                   Foreground="#64748B"/>
+                    </StackPanel>
+
+                    <ScrollViewer x:Name="PreviouslyDrawnTicketsScrollViewer"
+                                  IsVisible="False"
+                                  HorizontalScrollBarVisibility="Disabled"
+                                  VerticalScrollBarVisibility="Auto">
+                        <WrapPanel x:Name="PreviouslyDrawnTicketsPanel"
+                                   Orientation="Horizontal"
+                                   HorizontalAlignment="Stretch"
+                                   VerticalAlignment="Top"
+                                   ItemHeight="88"
+                                   ItemWidth="250"
+                                   Margin="0,0,4,0"/>
+                    </ScrollViewer>
+                </Grid>
+            </Border>
+
+            <Border x:Name="InfoPanel"
+                    Grid.Row="3" Grid.Column="2"
+                    CornerRadius="24"
+                    Padding="24,20"
+                    Background="#FFFFFF"
+                    BorderBrush="#BFDBFE"
+                    BorderThickness="3"
+                    IsVisible="True">
+                <StackPanel Spacing="12"
+                            VerticalAlignment="Center">
+                    <TextBlock x:Name="InfoPanelTitle"
+                               Text="HOW TO CLAIM"
+                               FontSize="24"
+                               FontWeight="Bold"
+                               Foreground="#0F172A"
+                               LetterSpacing="1"/>
+                    <TextBlock x:Name="InfoPanelLine1"
+                               Text="Present your ticket at the counter"
+                               FontSize="18"
+                               Foreground="#334155"
+                               TextWrapping="Wrap"/>
+                </StackPanel>
             </Border>
 
             <Canvas x:Name="OverlayCanvas"
@@ -127,9 +272,11 @@
             </Border>
         </Border>
 
-        <Border Grid.Row="2"
+        <Border x:Name="FooterPanel"
+                Grid.Row="2"
                 Background="#E5E7EB"
-                Padding="10,8">
+                Padding="10,8"
+                IsVisible="False">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>

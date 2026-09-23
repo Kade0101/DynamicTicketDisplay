@@ -53,14 +53,6 @@
                                    FontFamily="Segoe UI Black"
                                    Foreground="#111827" />
                     </StackPanel>
-
-                    <TextBlock Grid.Row="2"
-                               Text="CALLED NUMBER"
-                               HorizontalAlignment="Center"
-                               FontSize="18"
-                               FontWeight="SemiBold"
-                               Foreground="#9CA3AF"
-                               LetterSpacing="1"/>
                 </Grid>
             </Border>
 
