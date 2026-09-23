@@ -1,8 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Animation;
 using Avalonia.Controls;
@@ -13,6 +8,12 @@ using Avalonia.Interactivity;
 using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Styling;
+using Newtonsoft.Json;
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace RaffleDisplayApplication;
 
@@ -32,6 +33,14 @@ public partial class MainWindow : Window
     private bool IsTicketModeActive =>
         ModeTabControl?.SelectedItem == TicketModeTab;
 
+    private static readonly string PersistedStateFilePath = System.IO.Path.Combine(
+    Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+    "DynamicTicketDisplay",
+    "client-state.json");
+    private sealed class PersistedState
+    {
+        public string Instructions { get; set; } = string.Empty;
+    }
     private sealed class DrawnTicketGroup
     {
         public string PrizeName { get; init; } = string.Empty;
@@ -42,6 +51,7 @@ public partial class MainWindow : Window
     {
         InitializeComponent();
         Opened += MainWindow_Opened;
+        LoadPersistedState();
     }
 
     private void MainWindow_Opened(object? sender, EventArgs e)
@@ -93,7 +103,42 @@ public partial class MainWindow : Window
             SetCreateTicketButton(slot.Value, slot.Key);
         }
     }
+    private void LoadPersistedState()
+    {
+        try
+        {
+            if (!File.Exists(PersistedStateFilePath))
+                return;
 
+            var json = File.ReadAllText(PersistedStateFilePath);
+            var state = JsonConvert.DeserializeObject<PersistedState>(json);
+            if (PrizeInstructionsTextBox != null)
+                PrizeInstructionsTextBox.Text = state?.Instructions ?? string.Empty;
+        }
+        catch
+        {
+        }
+    }
+
+    private void SavePersistedState()
+    {
+        try
+        {
+            var directory = System.IO.Path.GetDirectoryName(PersistedStateFilePath);
+            if (!string.IsNullOrWhiteSpace(directory))
+                Directory.CreateDirectory(directory);
+
+            var state = new PersistedState
+            {
+                Instructions = PrizeInstructionsTextBox?.Text ?? string.Empty
+            };
+
+            File.WriteAllText(PersistedStateFilePath, JsonConvert.SerializeObject(state, Formatting.Indented));
+        }
+        catch
+        {
+        }
+    }
     private void ModeTabControl_SelectionChanged(object? sender, SelectionChangedEventArgs e)
     {
         if (!isInitialized)
@@ -376,6 +421,7 @@ public partial class MainWindow : Window
             await PiMessageClient.SendInstructionsAsync(ipAddress, 5000, instructions);
             isEditingPrizeInstructions = false;
             UpdatePrizeInstructionsEditState();
+            SavePersistedState();
             EditPrizeInstructionsButton?.Focus();
         }
         catch (Exception ex)

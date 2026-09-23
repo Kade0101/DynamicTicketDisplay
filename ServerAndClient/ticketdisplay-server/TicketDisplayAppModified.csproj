@@ -7,7 +7,7 @@
 		<OutputType>Exe</OutputType>
 		<StartupObject>TicketDisplayAppModified.Program</StartupObject>
 		<AvaloniaVersion>11.0.0</AvaloniaVersion>
-		<AssemblyName>TicketAppV1.2.9</AssemblyName>
+		<AssemblyName>Server</AssemblyName>
 
 		<RuntimeIdentifiers>win-x64;linux-arm64</RuntimeIdentifiers> 
 		

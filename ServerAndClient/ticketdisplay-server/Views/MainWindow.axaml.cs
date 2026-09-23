@@ -29,7 +29,6 @@ public partial class MainWindow : Window
     {
         public string Instructions { get; set; } = string.Empty;
     }
-
     private const int Port = 5000;
     private static readonly string PersistedStateFilePath = System.IO.Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
@@ -239,7 +238,7 @@ public partial class MainWindow : Window
                         {
                             if (_prizeText != null)
                             {
-                                _prizeText.Text = message;
+                                _prizeText.Text = message.Trim('"'); ;
                             }
                         });
                     }
@@ -282,7 +281,7 @@ public partial class MainWindow : Window
         if (context == "Prize")
         {
             string prize = json["Item1"]?.ToString() ?? "";
-            UpdatePrize(prize);
+            UpdatePrize(prize.Trim('"'));
             await AppendLogAsync($"Prize updated: {prize}");
             return;
         }
