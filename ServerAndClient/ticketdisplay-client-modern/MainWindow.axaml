@@ -9,361 +9,658 @@
     SystemDecorations="None"
     CanResize="False"
     WindowStartupLocation="CenterScreen"
-    Background="{StaticResource NavyBrush}">
+    Background="Gray">
 
     <Window.Resources>
-        <SolidColorBrush x:Key="NavyBrush" Color="#101B2D" />
-        <SolidColorBrush x:Key="NavyLightBrush" Color="#182544" />
-        <SolidColorBrush x:Key="AccentBrush" Color="#357AB8" />
-        <SolidColorBrush x:Key="WhiteBrush" Color="White" />
+    <SolidColorBrush x:Key="MainBackgroundBrush" Color="#101B2D" />
+
+    <SolidColorBrush x:Key="PanelBrush" Color="FloralWhite" />
+
+    <SolidColorBrush x:Key="PanelAltBrush" Color="LightSlateGray" />
+
+    <SolidColorBrush x:Key="AccentBrush" Color="#357AB8" />
+    <SolidColorBrush x:Key="AccentHoverBrush" Color="#2F6EA6" />
+    <SolidColorBrush x:Key="AccentPressedBrush" Color="#285A99" />
+
+    <SolidColorBrush x:Key="HeadingBrush" Color="#101B2D" />
+    <SolidColorBrush x:Key="TextBrush" Color="#101B2D" />
+
+    <SolidColorBrush x:Key="MutedBrush" Color="#6B7280" />
+
+    <SolidColorBrush x:Key="WhiteBrush" Color="White" />
     </Window.Resources>
 
     <Window.Styles>
-        <!-- Standard action button -->
         <Style Selector="Button.flat">
             <Setter Property="Background" Value="{StaticResource AccentBrush}" />
             <Setter Property="Foreground" Value="{StaticResource WhiteBrush}" />
             <Setter Property="FontWeight" Value="SemiBold" />
             <Setter Property="FontSize" Value="18" />
-            <Setter Property="Padding" Value="14,6" />
-            <Setter Property="Margin" Value="0,0,16,0" />
+            <Setter Property="Padding" Value="16,8" />
+            <Setter Property="Margin" Value="0,0,14,0" />
             <Setter Property="BorderThickness" Value="0" />
             <Setter Property="CornerRadius" Value="10" />
+            <Setter Property="MinWidth" Value="170" />
+        </Style>
+
+        <Style Selector="Button.flat /template/ ContentPresenter">
+            <Setter Property="Background" Value="{StaticResource AccentBrush}" />
+            <Setter Property="Foreground" Value="{StaticResource WhiteBrush}" />
         </Style>
 
         <Style Selector="Button.flat:pointerover">
-            <Setter Property="Background" Value="#285A99" />
+            <Setter Property="Background" Value="{StaticResource AccentHoverBrush}" />
+        </Style>
+
+        <Style Selector="Button.flat:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="{StaticResource AccentHoverBrush}" />
+            <Setter Property="Foreground" Value="{StaticResource WhiteBrush}" />
         </Style>
 
         <Style Selector="Button.flat:pressed">
-            <Setter Property="Background" Value="#1D406B" />
+            <Setter Property="Background" Value="{StaticResource AccentPressedBrush}" />
+        </Style>
+
+        <Style Selector="Button.flat:pressed /template/ ContentPresenter">
+            <Setter Property="Background" Value="{StaticResource AccentPressedBrush}" />
+            <Setter Property="Foreground" Value="{StaticResource WhiteBrush}" />
         </Style>
 
         <Style Selector="Button.flat:disabled">
-            <Setter Property="Background" Value="#444B5A" />
-            <Setter Property="Foreground" Value="#B0B8C1" />
+            <Setter Property="Background" Value="#C9CDD3" />
+            <Setter Property="Foreground" Value="{StaticResource MutedBrush}" />
         </Style>
 
-        <!-- Prize/redraw toggle button -->
         <Style Selector="ToggleButton.flatToggle">
             <Setter Property="Background" Value="{StaticResource AccentBrush}" />
             <Setter Property="Foreground" Value="{StaticResource WhiteBrush}" />
             <Setter Property="FontWeight" Value="SemiBold" />
             <Setter Property="FontSize" Value="18" />
-            <Setter Property="Padding" Value="14,6" />
+            <Setter Property="Padding" Value="16,8" />
             <Setter Property="BorderThickness" Value="0" />
             <Setter Property="CornerRadius" Value="10" />
+            <Setter Property="MinWidth" Value="170" />
+        </Style>
+
+        <Style Selector="ToggleButton.flatToggle /template/ ContentPresenter">
+            <Setter Property="Background" Value="{StaticResource AccentBrush}" />
+            <Setter Property="Foreground" Value="{StaticResource WhiteBrush}" />
         </Style>
 
         <Style Selector="ToggleButton.flatToggle:pointerover">
-            <Setter Property="Background" Value="#285A99" />
+            <Setter Property="Background" Value="{StaticResource AccentHoverBrush}" />
+        </Style>
+
+        <Style Selector="ToggleButton.flatToggle:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="{StaticResource AccentHoverBrush}" />
+            <Setter Property="Foreground" Value="{StaticResource WhiteBrush}" />
         </Style>
 
         <Style Selector="ToggleButton.flatToggle:pressed">
-            <Setter Property="Background" Value="#1D406B" />
+            <Setter Property="Background" Value="{StaticResource AccentPressedBrush}" />
+        </Style>
+
+        <Style Selector="ToggleButton.flatToggle:pressed /template/ ContentPresenter">
+            <Setter Property="Background" Value="{StaticResource AccentPressedBrush}" />
+            <Setter Property="Foreground" Value="{StaticResource WhiteBrush}" />
         </Style>
 
         <Style Selector="ToggleButton.flatToggle:checked">
-            <Setter Property="Background" Value="{StaticResource WhiteBrush}" />
-            <Setter Property="Foreground" Value="{StaticResource AccentBrush}" />
+            <Setter Property="Background" Value="{StaticResource HeadingBrush}" />
+            <Setter Property="Foreground" Value="{StaticResource WhiteBrush}" />
         </Style>
 
-        <!-- Dynamically-created Create Ticket button -->
+        <Style Selector="ToggleButton.flatToggle:checked /template/ ContentPresenter">
+            <Setter Property="Background" Value="{StaticResource HeadingBrush}" />
+            <Setter Property="Foreground" Value="{StaticResource WhiteBrush}" />
+        </Style>
+
         <Style Selector="Button.createTicket">
             <Setter Property="Background" Value="{StaticResource AccentBrush}" />
             <Setter Property="Foreground" Value="{StaticResource WhiteBrush}" />
             <Setter Property="FontWeight" Value="Bold" />
             <Setter Property="FontSize" Value="22" />
-            <Setter Property="Padding" Value="12,4" />
-            <Setter Property="Width" Value="200" />
-            <Setter Property="Height" Value="60" />
+            <Setter Property="Padding" Value="16,8" />
+            <Setter Property="MinWidth" Value="200" />
+            <Setter Property="Height" Value="58" />
             <Setter Property="BorderThickness" Value="0" />
             <Setter Property="CornerRadius" Value="10" />
         </Style>
 
+        <Style Selector="Button.createTicket /template/ ContentPresenter">
+            <Setter Property="Background" Value="{StaticResource AccentBrush}" />
+            <Setter Property="Foreground" Value="{StaticResource WhiteBrush}" />
+        </Style>
+
         <Style Selector="Button.createTicket:pointerover">
-            <Setter Property="Background" Value="#285A99" />
+            <Setter Property="Background" Value="{StaticResource AccentHoverBrush}" />
+        </Style>
+
+        <Style Selector="Button.createTicket:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="{StaticResource AccentHoverBrush}" />
+            <Setter Property="Foreground" Value="{StaticResource WhiteBrush}" />
         </Style>
 
         <Style Selector="Button.createTicket:pressed">
-            <Setter Property="Background" Value="#1D406B" />
+            <Setter Property="Background" Value="{StaticResource AccentPressedBrush}" />
         </Style>
 
-        <!-- Small X button used inside ticket slots -->
+        <Style Selector="Button.createTicket:pressed /template/ ContentPresenter">
+            <Setter Property="Background" Value="{StaticResource AccentPressedBrush}" />
+            <Setter Property="Foreground" Value="{StaticResource WhiteBrush}" />
+        </Style>
+
         <Style Selector="Button.clearTicket">
-            <Setter Property="Width" Value="30" />
-            <Setter Property="Height" Value="30" />
+            <Setter Property="Width" Value="34" />
+            <Setter Property="Height" Value="34" />
             <Setter Property="Padding" Value="0" />
             <Setter Property="Background" Value="Transparent" />
-            <Setter Property="Foreground" Value="White" />
+            <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
             <Setter Property="FontWeight" Value="Bold" />
             <Setter Property="FontSize" Value="16" />
             <Setter Property="BorderThickness" Value="0" />
-            <Setter Property="CornerRadius" Value="15" />
+            <Setter Property="CornerRadius" Value="17" />
         </Style>
 
         <Style Selector="Button.clearTicket:pointerover">
-            <Setter Property="Background" Value="#66333333" />
+            <Setter Property="Background" Value="#22000000" />
         </Style>
+
+        <Style Selector="TabControl.modeTabs">
+            <Setter Property="Padding" Value="0" />
+        </Style>
+
+        <Style Selector="TabItem.modeTab">
+            <Setter Property="FontSize" Value="18" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
+            <Setter Property="Background" Value="{StaticResource PanelAltBrush}" />
+            <Setter Property="Padding" Value="18,10" />
+            <Setter Property="Margin" Value="0,0,10,0" />
+        </Style>
+
+        <Style Selector="TabItem.modeTab:selected">
+            <Setter Property="Background" Value="{StaticResource AccentBrush}" />
+            <Setter Property="Foreground" Value="{StaticResource WhiteBrush}" />
+        </Style>
+
+         <Style Selector="TextBox#PrizeInstructionsTextBox">
+        <Setter Property="Background" Value="White" />
+        <Setter Property="Foreground" Value="#101B2D" />
+        <Setter Property="BorderBrush" Value="#C8D2DD" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CaretBrush" Value="#101B2D" />
+        <Setter Property="SelectionBrush" Value="#357AB8" />
+        <Setter Property="SelectionForegroundBrush" Value="White" />
+        <Setter Property="IsReadOnly" Value="True"/>
+        <Setter Property="IsHitTestVisible" Value="False"/>
+        <Setter Property="Focusable" Value="False"/>
+        </Style>
+
+    <Style Selector="TextBox#PrizeInstructionsTextBox:pointerover">
+        <Setter Property="Background" Value="White" />
+        <Setter Property="Foreground" Value="#101B2D" />
+        <Setter Property="BorderBrush" Value="#9EB6CF" />
+    </Style>
+
+    <Style Selector="TextBox#PrizeInstructionsTextBox:focus">
+        <Setter Property="Background" Value="White" />
+        <Setter Property="Foreground" Value="#101B2D" />
+        <Setter Property="BorderBrush" Value="#8FA0B2" />
+        <Setter Property="BorderThickness" Value="1" />
+    </Style>
+
+    <Style Selector="TextBox#PrizeInstructionsTextBox /template/ ScrollViewer">
+        <Setter Property="Background" Value="White" />
+    </Style>
+
+    <Style Selector="TextBox#PrizeInstructionsTextBox /template/ Border">
+        <Setter Property="Background" Value="White" />
+    </Style>
     </Window.Styles>
 
-    <DockPanel>
-
-        <!-- Top bar -->
+    <DockPanel LastChildFill="True">
         <Border
             DockPanel.Dock="Top"
-            Height="60"
-            Background="{StaticResource NavyLightBrush}"
-            BoxShadow="0 2 12 0 #33000000">
+            Height="72"
+            Background="{StaticResource PanelBrush}"
+            BoxShadow="0 2 12 0 #33000000"
+            Padding="20,0">
 
             <DockPanel VerticalAlignment="Center">
                 <Button
                     Classes="flat"
                     Content="⟵ Back"
-                    Width="120"
-                    Height="40"
-                    Margin="16,0,0,0"
+                    Width="132"
+                    Height="42"
+                    Margin="0"
                     Click="BackButton_Click" />
 
                 <TextBlock
                     Text="Raffle Display"
                     VerticalAlignment="Center"
-                    Foreground="White"
+                    Foreground="{StaticResource HeadingBrush}"
                     FontWeight="Bold"
-                    FontSize="26"
-                    Margin="32,0,0,0" />
+                    FontSize="28"
+                    Margin="24,0,0,0" />
             </DockPanel>
         </Border>
 
-        <!-- Footer -->
         <Border
             DockPanel.Dock="Bottom"
-            Height="72"
-            Background="{StaticResource NavyLightBrush}">
+            Height="80"
+            Background="{StaticResource PanelBrush}"
+            Padding="24,0">
 
-            <Grid ColumnDefinitions="*,Auto">
+            <Grid ColumnDefinitions="*,Auto" VerticalAlignment="Center">
                 <TextBlock
                     Grid.Column="0"
                     Text="Version 1.0.2"
                     VerticalAlignment="Center"
-                    Margin="32,0,0,0"
-                    Foreground="{StaticResource AccentBrush}"
+                    Margin="4,0,0,0"
+                    Foreground="{StaticResource HeadingBrush}"
                     FontWeight="SemiBold"
-                    FontSize="14" />
+                    FontSize="15" />
 
                 <StackPanel
                     Grid.Column="1"
                     Orientation="Horizontal"
                     VerticalAlignment="Center"
-                    Margin="0,0,32,0">
+                    Spacing="14">
 
                     <Button
                         x:Name="ShowOnTVButton"
                         Classes="flat"
                         Content="Show on TV"
-                        Width="180"
+                        Width="176"
                         Height="48"
+                        Margin="0"
                         Click="ShowOnTV_Click" />
 
                     <Button
+                        x:Name="ConfirmDrawButton"
+                        Classes="flat"
+                        Content="Confirm"
+                        Width="176"
+                        Height="48"
+                        Margin="0"
+                        Click="ConfirmDraw_Click" />
+
+                    <Button
+                        x:Name="ClearScreenButton"
                         Classes="flat"
                         Content="Clear Screen"
-                        Width="180"
+                        Width="176"
                         Height="48"
+                        Margin="0"
                         Click="ClearScreenOnTV_Click" />
 
-					<ToggleButton
-						x:Name="RedrawToggleButton"
-						Classes="flatToggle"
-						Content="Redraw"
-						Width="180"
-						Height="48"
-						Margin="0,0,16,0"
-						IsCheckedChanged="RedrawToggleButton_IsCheckedChanged" />
+                    <ToggleButton
+                        x:Name="RedrawToggleButton"
+                        Classes="flatToggle"
+                        Content="Redraw"
+                        Width="176"
+                        Height="48"
+                        Margin="0"
+                        IsCheckedChanged="RedrawToggleButton_IsCheckedChanged" />
                 </StackPanel>
             </Grid>
         </Border>
 
-        <!-- Main area -->
-        <Grid
-            ColumnDefinitions="2*,*"
-            Margin="28">
+        <TabControl
+            x:Name="ModeTabControl"
+            Classes="modeTabs"
+            Margin="24,18,24,18"
+            SelectionChanged="ModeTabControl_SelectionChanged">
 
-            <!-- Ticket area -->
-            <Border
-                Grid.Column="0"
-                Background="{StaticResource NavyLightBrush}"
-                CornerRadius="24"
-                BoxShadow="0 3 14 0 #33000000"
-                Padding="40"
-                Margin="0,0,20,0"
-                MinWidth="700"
-                MinHeight="400"
-                VerticalAlignment="Center">
+            <TabItem x:Name="TicketModeTab" Classes="modeTab" Header="Ticket Mode">
+                <Grid
+                    ColumnDefinitions="2.35*,0.95*"
+                    ColumnSpacing="20">
 
-                <StackPanel Spacing="16">
-                    <StackPanel
-                        Orientation="Horizontal"
-                        HorizontalAlignment="Center">
+                    <Border
+                        Grid.Column="0"
+                        Background="{StaticResource PanelBrush}"
+                        CornerRadius="24"
+                        BoxShadow="0 3 14 0 #33000000"
+                        Padding="30"
+                        MinHeight="420"
+                        VerticalAlignment="Stretch">
 
-                        <TextBlock
-                            Text="Current Prize: "
-                            FontWeight="Bold"
-                            FontSize="20"
-                            Foreground="{StaticResource AccentBrush}" />
+                        <Grid RowDefinitions="Auto,*,Auto" RowSpacing="18">
+                            <StackPanel
+                                Orientation="Horizontal"
+                                HorizontalAlignment="Center"
+                                Spacing="8">
 
-                        <TextBlock
-                            x:Name="CurrentPrizeValue"
-                            FontWeight="Bold"
-                            FontSize="20"
-                            Foreground="{StaticResource WhiteBrush}" />
-                    </StackPanel>
+                                <TextBlock
+                                    Text="Current Prize:"
+                                    FontWeight="Bold"
+                                    FontSize="22"
+                                    Foreground="{StaticResource HeadingBrush}" />
 
-                    <Grid
-                        x:Name="TicketSlotsGrid"
-                        ColumnDefinitions="*,*">
+                                <TextBlock
+                                    x:Name="CurrentPrizeValue"
+                                    FontWeight="Bold"
+                                    FontSize="22"
+                                    Foreground="{StaticResource TextBrush}" />
+                            </StackPanel>
 
-                        <!-- Ticket slot 1 -->
-                        <StackPanel
-                            x:Name="TicketSlot1Panel"
-                            Grid.Column="0"
-                            Margin="24,0"
-                            VerticalAlignment="Center">
+                            <Grid
+                                x:Name="TicketSlotsGrid"
+                                Grid.Row="1"
+                                RowDefinitions="*,*"
+                                ColumnDefinitions="*,*"
+                                RowSpacing="20"
+                                ColumnSpacing="100"
+                                HorizontalAlignment="Stretch"
+                                VerticalAlignment="Stretch"
+                                Margin="80,0,80,1">
 
-                            <TextBlock
-                                Text="Ticket Slot 1"
-                                FontWeight="Bold"
-                                FontSize="18"
-                                Foreground="{StaticResource AccentBrush}"
-                                Margin="0,0,0,12"
-                                HorizontalAlignment="Center" />
+                                <StackPanel
+                                    x:Name="TicketSlot1Panel"
+                                    Grid.Row="0"
+                                    Grid.Column="0"
+                                    VerticalAlignment="Stretch"
+                                    Spacing="10">
+                                    <TextBlock Text="Ticket Slot 1" FontWeight="Bold" FontSize="18" Foreground="{StaticResource HeadingBrush}" HorizontalAlignment="Center" />
+                                    <Border Background="{StaticResource PanelAltBrush}" CornerRadius="16" BoxShadow="0 2 10 0 #2A000000" Padding="28" MinHeight="220" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Tapped="TicketSlotBorder_Tapped" Tag="1">
+                                        <Grid>
+                                            <ContentControl x:Name="TicketSlot1" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                            <Button x:Name="ClearTicketSlot1Button" Classes="clearTicket" Content="✕" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,-12,-12,0" IsVisible="False" Click="ClearTicketSlot1_Click" />
+                                        </Grid>
+                                    </Border>
+                                </StackPanel>
+
+                                <StackPanel
+                                    x:Name="TicketSlot2Panel"
+                                    Grid.Row="0"
+                                    Grid.Column="1"
+                                    VerticalAlignment="Stretch"
+                                    Spacing="10">
+                                    <TextBlock Text="Ticket Slot 2" FontWeight="Bold" FontSize="18" Foreground="{StaticResource HeadingBrush}" HorizontalAlignment="Center" />
+                                    <Border Background="{StaticResource PanelAltBrush}" CornerRadius="16" BoxShadow="0 2 10 0 #2A000000" Padding="28" MinHeight="220" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Tapped="TicketSlotBorder_Tapped" Tag="2">
+                                        <Grid>
+                                            <ContentControl x:Name="TicketSlot2" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                            <Button x:Name="ClearTicketSlot2Button" Classes="clearTicket" Content="✕" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,-12,-12,0" IsVisible="False" Click="ClearTicketSlot2_Click" />
+                                        </Grid>
+                                    </Border>
+                                </StackPanel>
+
+                                <StackPanel
+                                    x:Name="TicketSlot3Panel"
+                                    Grid.Row="1"
+                                    Grid.Column="0"
+                                    VerticalAlignment="Stretch"
+                                    Spacing="10">
+                                    <TextBlock Text="Ticket Slot 3" FontWeight="Bold" FontSize="18" Foreground="{StaticResource HeadingBrush}" HorizontalAlignment="Center" />
+                                    <Border Background="{StaticResource PanelAltBrush}" CornerRadius="16" BoxShadow="0 2 10 0 #2A000000" Padding="28" MinHeight="220" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Tapped="TicketSlotBorder_Tapped" Tag="3">
+                                        <Grid>
+                                            <ContentControl x:Name="TicketSlot3" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                            <Button x:Name="ClearTicketSlot3Button" Classes="clearTicket" Content="✕" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,-12,-12,0" IsVisible="False" Click="ClearTicketSlot3_Click" />
+                                        </Grid>
+                                    </Border>
+                                </StackPanel>
+
+                                <StackPanel
+                                    x:Name="TicketSlot4Panel"
+                                    Grid.Row="1"
+                                    Grid.Column="1"
+                                    VerticalAlignment="Stretch"
+                                    Spacing="10">
+                                    <TextBlock Text="Ticket Slot 4" FontWeight="Bold" FontSize="18" Foreground="{StaticResource HeadingBrush}" HorizontalAlignment="Center" />
+                                    <Border Background="{StaticResource PanelAltBrush}" CornerRadius="16" BoxShadow="0 2 10 0 #2A000000" Padding="28" MinHeight="220" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Tapped="TicketSlotBorder_Tapped" Tag="4">
+                                        <Grid>
+                                            <ContentControl x:Name="TicketSlot4" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                            <Button x:Name="ClearTicketSlot4Button" Classes="clearTicket" Content="✕" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,-12,-12,0" IsVisible="False" Click="ClearTicketSlot4_Click" />
+                                        </Grid>
+                                    </Border>
+                                </StackPanel>
+                            </Grid>
 
                             <Border
-                                Background="{StaticResource NavyBrush}"
-                                CornerRadius="12"
-                                BoxShadow="0 2 10 0 #2A000000"
-                                Padding="32"
-                                MinHeight="220"
-                                Tapped="TicketSlotBorder_Tapped"
-                                Tag="1">
-
-                                <Grid>
-                                    <ContentControl
-                                        x:Name="TicketSlot1"
-                                        HorizontalAlignment="Center"
+                                Grid.Row="2"
+                                Background="#E7EEF5"
+                                CornerRadius="18"
+                                BoxShadow="0 3 12 0 #22000000"
+                                Padding="20"
+                                Margin="18,4,18,0">
+                                <Grid RowDefinitions="Auto,Auto,Auto" RowSpacing="10">
+                                    <TextBlock
+                                        Text="Prize Collection Instructions"
+                                        FontWeight="Bold"
+                                        FontSize="20"
+                                        Foreground="{StaticResource HeadingBrush}"
                                         VerticalAlignment="Center" />
 
-                                    <Button
-                                        x:Name="ClearTicketSlot1Button"
-                                        Classes="clearTicket"
-                                        Content="✕"
-                                        HorizontalAlignment="Right"
-                                        VerticalAlignment="Top"
-                                        Margin="0,-18,-18,0"
-                                        IsVisible="False"
-                                        Click="ClearTicketSlot1_Click" />
+                                    <TextBlock
+                                        Grid.Row="1"
+                                        Text="Shown to staff/customers for collection notes and special pickup instructions."
+                                        FontSize="14"
+                                        Foreground="{StaticResource MutedBrush}"
+                                        TextWrapping="Wrap" />
+
+                                    <Grid
+                                        Grid.Row="2"
+                                        ColumnDefinitions="*,Auto"
+                                        ColumnSpacing="12">
+                                        <TextBox
+                                            x:Name="PrizeInstructionsTextBox"
+                                            Text="Please see staff to collect your prize after the draw is confirmed."
+                                            AcceptsReturn="True"
+                                            TextWrapping="Wrap"
+                                            Height="96"
+                                            IsReadOnly="True"
+                                            IsHitTestVisible="False"
+                                            Focusable="False"
+                                            Background="White"
+                                            Foreground="{StaticResource TextBrush}"
+                                            BorderBrush="#C8D2DD"
+                                            BorderThickness="1"
+                                            CornerRadius="0"
+                                            Padding="14"
+                                            VerticalContentAlignment="Top"
+                                            CaretBrush="{StaticResource TextBrush}"
+                                            SelectionBrush="#357AB8"
+                                            SelectionForegroundBrush="White" />
+
+                                        <StackPanel
+                                            Grid.Column="1"
+                                            Spacing="10"
+                                            VerticalAlignment="Top">
+                                            <Button
+                                                x:Name="EditPrizeInstructionsButton"
+                                                Classes="flat"
+                                                Content="Edit"
+                                                Width="110"
+                                                Height="40"
+                                                Margin="0"
+                                                Click="EditPrizeInstructionsButton_Click" />
+
+                                            <Button
+                                                x:Name="ConfirmPrizeInstructionsButton"
+                                                Classes="flat"
+                                                Content="Confirm"
+                                                Width="110"
+                                                Height="40"
+                                                Margin="0"
+                                                IsEnabled="False"
+                                                Click="ConfirmPrizeInstructionsButton_Click" />
+                                        </StackPanel>
+                                    </Grid>
                                 </Grid>
                             </Border>
-                        </StackPanel>
+                        </Grid>
+                    </Border>
 
-                        <!-- Ticket slot 2 -->
-                        <StackPanel
-                            x:Name="TicketSlot2Panel"
-                            Grid.Column="1"
-                            Margin="24,0"
-                            VerticalAlignment="Center">
+                    <Border
+                        Grid.Column="1"
+                        Background="{StaticResource PanelBrush}"
+                        CornerRadius="24"
+                        BoxShadow="0 3 14 0 #33000000"
+                        Padding="28"
+                        MinWidth="300"
+                        VerticalAlignment="Top">
 
-                            <TextBlock
-                                Text="Ticket Slot 2"
-                                FontWeight="Bold"
-                                FontSize="18"
-                                Foreground="{StaticResource AccentBrush}"
-                                Margin="0,0,0,12"
-                                HorizontalAlignment="Center" />
+                        <Grid RowDefinitions="Auto,*" RowSpacing="16">
+                            <Grid ColumnDefinitions="44,*,44">
+                                <Border Grid.Column="0" Width="44" />
 
-                            <Border
-                                Background="{StaticResource NavyBrush}"
-                                CornerRadius="12"
-                                BoxShadow="0 2 10 0 #2A000000"
-                                Padding="32"
-                                MinHeight="220"
-                                Tapped="TicketSlotBorder_Tapped"
-                                Tag="2">
+                                <TextBlock
+                                    Grid.Column="1"
+                                    Text="Select Prize"
+                                    FontWeight="Bold"
+                                    FontSize="22"
+                                    Foreground="{StaticResource HeadingBrush}"
+                                    VerticalAlignment="Center"
+                                    HorizontalAlignment="Center"
+                                    TextAlignment="Center" />
 
-                                <Grid>
-                                    <ContentControl
-                                        x:Name="TicketSlot2"
-                                        HorizontalAlignment="Center"
-                                        VerticalAlignment="Center" />
+                                <Button
+                                    x:Name="AddPrizeButton"
+                                    Grid.Column="2"
+                                    Classes="flat"
+                                    Content="+"
+                                    Width="30"
+                                    Height="30"
+                                    MinWidth="30"
+                                    FontSize="24"
+                                    Padding="0"
+                                    Margin="0"
+                                    HorizontalAlignment="Right"
+                                    HorizontalContentAlignment="Center"
+                                    VerticalContentAlignment="Center"
+                                    Click="AddPrizeButton_Click" />
+                            </Grid>
 
-                                    <Button
-                                        x:Name="ClearTicketSlot2Button"
-                                        Classes="clearTicket"
-                                        Content="✕"
-                                        HorizontalAlignment="Right"
-                                        VerticalAlignment="Top"
-                                        Margin="0,-18,-18,0"
-                                        IsVisible="False"
-                                        Click="ClearTicketSlot2_Click" />
-                                </Grid>
-                            </Border>
-                        </StackPanel>
+                            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                                <StackPanel Spacing="16" VerticalAlignment="Top">
+
+                                    <TextBlock
+                                        Text="Number of Tickets Needed"
+                                        FontWeight="SemiBold"
+                                        FontSize="16"
+                                        Foreground="{StaticResource TextBrush}" />
+
+                                    <ComboBox
+                                        x:Name="TicketCountComboBox"
+                                        SelectedIndex="1"
+                                        SelectionChanged="TicketCountComboBox_SelectionChanged">
+                                        <ComboBoxItem Content="1" />
+                                        <ComboBoxItem Content="2" />
+                                        <ComboBoxItem Content="3" />
+                                        <ComboBoxItem Content="4" />
+                                    </ComboBox>
+
+                                    <ToggleButton
+                                        x:Name="BeerPrizeButton"
+                                        Classes="flatToggle"
+                                        Content="2x Jugs of Beer"
+                                        HorizontalAlignment="Stretch"
+                                        Height="58"
+                                        Click="PrizeButton_Click" />
+
+                                    <ToggleButton
+                                        x:Name="GiftCardPrizeButton"
+                                        Classes="flatToggle"
+                                        Content="2x $20 Gift Cards"
+                                        HorizontalAlignment="Stretch"
+                                        Height="58"
+                                        Click="PrizeButton_Click" />
+
+                                    <ToggleButton
+                                        x:Name="SmallMeatPrizeButton"
+                                        Classes="flatToggle"
+                                        Content="2x Small Meat Trays"
+                                        HorizontalAlignment="Stretch"
+                                        Height="58"
+                                        Click="PrizeButton_Click" />
+
+                                    <ToggleButton
+                                        x:Name="LargeMeatPrizeButton"
+                                        Classes="flatToggle"
+                                        Content="1x Large Meat Tray"
+                                        HorizontalAlignment="Stretch"
+                                        Height="58"
+                                        Click="PrizeButton_Click" />
+
+                                    <StackPanel
+                                        x:Name="CustomPrizePanel"
+                                        Spacing="12" />
+
+                                    <TextBlock
+                                        Text="Previously Drawn"
+                                        FontWeight="Bold"
+                                        FontSize="20"
+                                        Foreground="{StaticResource HeadingBrush}"
+                                        Margin="0,8,0,0" />
+
+                                    <Border
+                                        Background="{StaticResource PanelAltBrush}"
+                                        CornerRadius="16"
+                                        Padding="16">
+                                        <StackPanel
+                                            x:Name="PreviouslyDrawnPanel"
+                                            Spacing="12">
+                                            <TextBlock
+                                                x:Name="NoPreviouslyDrawnText"
+                                                Text="No confirmed tickets yet."
+                                                Foreground="White"
+                                                FontSize="15"
+                                                TextWrapping="Wrap"/>
+                                        </StackPanel>
+                                    </Border>
+                                </StackPanel>
+                            </ScrollViewer>
+                        </Grid>
+                    </Border>
+                </Grid>
+            </TabItem>
+
+            <TabItem x:Name="AlternateLayoutsTab" Classes="modeTab" Header="Alternate Layouts">
+                <Border
+                    Background="{StaticResource PanelBrush}"
+                    CornerRadius="24"
+                    BoxShadow="0 3 14 0 #33000000"
+                    Padding="30">
+
+                    <Grid RowDefinitions="Auto,Auto,*" RowSpacing="16">
+                        <TextBlock
+                            Text="Alternate Layouts"
+                            FontSize="26"
+                            FontWeight="Bold"
+                            Foreground="{StaticResource HeadingBrush}" />
+
+                        <TextBlock
+                            Grid.Row="1"
+                            Text="Use this section for dynamic information layouts when ticket mode is not active."
+                            FontSize="16"
+                            Foreground="{StaticResource TextBrush}"
+                            TextWrapping="Wrap" />
+
+                        <Border
+                            Grid.Row="2"
+                            Background="{StaticResource PanelAltBrush}"
+                            CornerRadius="16"
+                            Padding="24">
+
+                            <StackPanel Spacing="14">
+                                <TextBlock
+                                    Text="Dynamic Content Placeholder"
+                                    FontSize="22"
+                                    FontWeight="Bold"
+                                    Foreground="{StaticResource HeadingBrush}" />
+
+                                <TextBlock
+                                    Text="Add alternate presentation layouts here, such as sponsor slides, announcements, event schedules, or custom TV content."
+                                    FontSize="16"
+                                    Foreground="{StaticResource TextBrush}"
+                                    TextWrapping="Wrap" />
+                            </StackPanel>
+                        </Border>
                     </Grid>
-                </StackPanel>
-            </Border>
-
-            <!-- Prize selection -->
-            <Border
-                Grid.Column="1"
-                Background="{StaticResource NavyLightBrush}"
-                CornerRadius="24"
-                BoxShadow="0 3 14 0 #33000000"
-                Padding="40,28"
-                MinWidth="300"
-                VerticalAlignment="Center">
-
-                <StackPanel Spacing="16">
-                    <TextBlock
-                        Text="Select Prize"
-                        FontWeight="Bold"
-                        FontSize="20"
-                        Foreground="{StaticResource AccentBrush}"
-                        HorizontalAlignment="Center"
-                        Margin="0,0,0,4" />
-
-                    <ToggleButton
-                        x:Name="BeerPrizeButton"
-                        Classes="flatToggle"
-                        Content="2x Jugs of Beer"
-                        Width="220"
-                        Height="60"
-                        Click="PrizeButton_Click" />
-
-                    <ToggleButton
-                        x:Name="GiftCardPrizeButton"
-                        Classes="flatToggle"
-                        Content="2x $20 Gift Cards"
-                        Width="220"
-                        Height="60"
-                        Click="PrizeButton_Click" />
-
-                    <ToggleButton
-                        x:Name="SmallMeatPrizeButton"
-                        Classes="flatToggle"
-                        Content="2x Small Meat Trays"
-                        Width="220"
-                        Height="60"
-                        Click="PrizeButton_Click" />
-
-                    <ToggleButton
-                        x:Name="LargeMeatPrizeButton"
-                        Classes="flatToggle"
-                        Content="1x Large Meat Tray"
-                        Width="220"
-                        Height="60"
-                        Click="PrizeButton_Click" />
-                </StackPanel>
-            </Border>
-        </Grid>
+                </Border>
+            </TabItem>
+        </TabControl>
     </DockPanel>
 </Window>

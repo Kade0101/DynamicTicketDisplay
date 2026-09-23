@@ -88,12 +88,6 @@ public partial class InputWindow : Window
             return;
         }
 
-        if (TicketList.Count >= 2)
-        {
-            ShowValidation("Both ticket slots are already filled.");
-            return;
-        }
-
         TicketList.Add(ticket);
         Ticket = ticket;
 
@@ -102,9 +96,6 @@ public partial class InputWindow : Window
 
         Debug.WriteLine(
             $"Ticket Info: {TicketInfoString}");
-
-        // Returned to MainWindow's:
-        // await inputWindow.ShowDialog<bool>(this)
         Close(true);
     }
 

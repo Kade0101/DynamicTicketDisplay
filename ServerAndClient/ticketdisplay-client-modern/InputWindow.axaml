@@ -21,15 +21,15 @@
         </Style>
 
         <Style Selector="Button.flat:pointerover">
-            <Setter Property="Background" Value="#285A99" />
+            <Setter Property="Background" Value="#2F6EA6" />
         </Style>
 
         <Style Selector="Button.flat:pressed">
-            <Setter Property="Background" Value="#1D406B" />
+            <Setter Property="Background" Value="#285A99" />
         </Style>
 
         <Style Selector="TextBox.ticketInput">
-            <Setter Property="Background" Value="#F4F6FA" />
+            <Setter Property="Background" Value="White" />
             <Setter Property="Foreground" Value="#101B2D" />
             <Setter Property="FontSize" Value="22" />
             <Setter Property="Padding" Value="14,8" />
@@ -39,8 +39,29 @@
             <Setter Property="CornerRadius" Value="8" />
         </Style>
 
+        <Style Selector="TextBox.ticketInput:pointerover">
+            <Setter Property="Background" Value="White" />
+            <Setter Property="BorderBrush" Value="#357AB8" />
+        </Style>
+
         <Style Selector="TextBox.ticketInput:focus">
-            <Setter Property="BorderBrush" Value="#6AA9E0" />
+            <Setter Property="Background" Value="White" />
+            <Setter Property="BorderBrush" Value="#357AB8" />
+        </Style>
+
+        <Style Selector="TextBox.ticketInput /template/ Border#borderElement">
+            <Setter Property="Background" Value="White" />
+            <Setter Property="BorderBrush" Value="#357AB8" />
+        </Style>
+
+        <Style Selector="TextBox.ticketInput:hover /template/ Border#borderElement">
+            <Setter Property="Background" Value="White" />
+            <Setter Property="BorderBrush" Value="#357AB8" />
+        </Style>
+
+        <Style Selector="TextBox.ticketInput:focus /template/ Border#borderElement">
+            <Setter Property="Background" Value="White" />
+            <Setter Property="BorderBrush" Value="#357AB8" />
         </Style>
 
         <Style Selector="ComboBox.ticketInput">
@@ -52,12 +73,37 @@
             <Setter Property="BorderBrush" Value="#357AB8" />
             <Setter Property="CornerRadius" Value="8" />
         </Style>
+
+        <Style Selector="ComboBox.ticketInput:pointerover">
+            <Setter Property="Background" Value="#F4F6FA" />
+            <Setter Property="BorderBrush" Value="#357AB8" />
+        </Style>
+
+        <Style Selector="ComboBox.ticketInput:focus">
+            <Setter Property="Background" Value="#F4F6FA" />
+            <Setter Property="BorderBrush" Value="#357AB8" />
+        </Style>
+
+        <Style Selector="ComboBoxItem">
+            <Setter Property="Background" Value="#FEFBF3" />
+            <Setter Property="Foreground" Value="#101B2D" />
+        </Style>
+
+        <Style Selector="ComboBoxItem:pointerover">
+            <Setter Property="Background" Value="#357AB8" />
+            <Setter Property="Foreground" Value="White" />
+        </Style>
+
+        <Style Selector="ComboBoxItem:selected">
+            <Setter Property="Background" Value="#357AB8" />
+            <Setter Property="Foreground" Value="White" />
+        </Style>
     </Window.Styles>
 
     <Grid>
         <Border
-            Background="#182544"
-            CornerRadius="32"
+            Background="#F8F0DF"
+            CornerRadius="12"
             BoxShadow="0 4 18 0 #33000000"
             Padding="60"
             MinWidth="500"
@@ -71,38 +117,42 @@
                     Text="Enter Ticket Details"
                     FontWeight="Bold"
                     FontSize="32"
-                    Foreground="#357AB8"
+                    Foreground="#79b4b7"
                     HorizontalAlignment="Center"
                     Margin="0,0,0,24" />
 
                 <TextBlock
                     Text="Raffle Number"
-                    Foreground="#357AB8"
+                    Foreground="#79b4b7"
                     FontSize="20"
                     Margin="0,0,0,4" />
 
-                <TextBox
-                    x:Name="RaffleInput"
-                    Classes="ticketInput"
-                    Watermark="0–100"
-                    Margin="0,0,0,16" />
+                <ThemeVariantScope RequestedThemeVariant="Light">
+                    <TextBox
+                        x:Name="RaffleInput"
+                        Classes="ticketInput"
+                        Watermark="0–100"
+                        Margin="0,0,0,16" />
+                </ThemeVariantScope>
 
                 <TextBlock
                     Text="Letter"
-                    Foreground="#357AB8"
+                    Foreground="#79b4b7"
                     FontSize="20"
                     Margin="0,0,0,4" />
 
-                <TextBox
-                    x:Name="LetterInput"
-                    Classes="ticketInput"
-                    MaxLength="1"
-                    Watermark="A–Z"
-                    Margin="0,0,0,16" />
+                <ThemeVariantScope RequestedThemeVariant="Light">
+                    <TextBox
+                        x:Name="LetterInput"
+                        Classes="ticketInput"
+                        MaxLength="1"
+                        Watermark="A–Z"
+                        Margin="0,0,0,16" />
+                </ThemeVariantScope>
 
                 <TextBlock
                     Text="Colour"
-                    Foreground="#357AB8"
+                    Foreground="#79b4b7"
                     FontSize="20"
                     Margin="0,0,0,4" />
 
