@@ -8,7 +8,7 @@ start "Ticket Server" dotnet run
 cd ..
 
 echo Firing up the Modern Avalonia Client App...
-cd ticketdisplay-client-modern
+cd ticketdisplay-client
 start "Ticket Client" dotnet run
 cd ..
 
